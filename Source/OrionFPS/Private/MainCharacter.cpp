@@ -55,6 +55,7 @@ AMainCharacter::AMainCharacter()
 	bIsDelay = false;
 }
 
+
 ////////////////////////////////////////////////////////////////////
 //
 //   Begin Play
@@ -73,9 +74,7 @@ void AMainCharacter::BeginPlay()
 //
 ////////////////////////////////////////////////////////////////////
 
-
-// Plaer Basic Movement Inputs Handles 
-
+// Player Basic Movement Inputs Handles 
 void AMainCharacter::MoveForward(float value)
 {
 	AddMovementInput(GetActorForwardVector(), value);
@@ -128,13 +127,11 @@ void AMainCharacter::EndGunPoint()
 }
 
 
-
 ////////////////////////////////////////////////////////////////////
 //
 //   Basic Event Tick
 //
 ////////////////////////////////////////////////////////////////////
-
 void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -142,18 +139,37 @@ void AMainCharacter::Tick(float DeltaTime)
 	// Get CurretVelocity every tick
 	CurrentVelocity = GetVelocity().Size();
 
+	//Check Main Basic Variables//
+	CheckCurrentVariables();
 
+	//Check/Set Current Movement Status //
+	SetCurrentMovementStatus();
+
+	//Set Current Movement Status//
+	SetCameraMovement();
+
+}
+
+
+////////////////////////////////////////////////////////////////////
+//
+//   Movement Internal Function
+//
+////////////////////////////////////////////////////////////////////
+
+// Check Movement/Jump State
+void AMainCharacter::CheckCurrentVariables()
+{
 	////Set Moving Control Varible/////
 	if (CurrentVelocity != 0)
 	{
 		bIsMoving = true;
-	
+
 	}
 	else
 	{
 		bIsMoving = false;
 	}
-
 
 	///// Set Jumping Control ////
 	if (GetVelocity().Z != 0)
@@ -174,18 +190,19 @@ void AMainCharacter::Tick(float DeltaTime)
 			bIsJumping = false;
 			bIsJumpCalled = false;
 
-			BP_EndCameraJump();		
-	    }		
+			BP_EndCameraJump();
+		}
 	}
+}
 
-
-
-	/////////Set Current Movement Status /////////
-	if (bIsMoving && !bIsRuning && !bIsPointed )
+// Set Current Movement Status -> Idle/Walk/Sprint/Pointed
+void AMainCharacter::SetCurrentMovementStatus()
+{
+	if (bIsMoving && !bIsRuning && !bIsPointed)
 	{
 		MovementStatus = EMovementStatus::EMS_Walking;
 	}
-	if (bIsMoving && bIsRuning && !bIsPointed  && !bIsDelay )
+	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay)
 	{
 		MovementStatus = EMovementStatus::EMS_Sprinting;
 	}
@@ -197,9 +214,11 @@ void AMainCharacter::Tick(float DeltaTime)
 	{
 		MovementStatus = EMovementStatus::EMS_Idle;
 	}
+}
 
-
-
+// Set Camera Movement -> Sprint/Pointed/
+void AMainCharacter::SetCameraMovement()
+{
 	//Activa/Deactive -> Camera Sprinting Movements
 	if (GetMovementStatus() == EMovementStatus::EMS_Sprinting)
 	{
@@ -208,7 +227,7 @@ void AMainCharacter::Tick(float DeltaTime)
 			bIsSprintCalled = true;
 
 			BP_StarCameraSprint();
-			GetCharacterMovement()->MaxWalkSpeed = 700;	
+			GetCharacterMovement()->MaxWalkSpeed = 700;
 		}
 
 	}
@@ -217,9 +236,9 @@ void AMainCharacter::Tick(float DeltaTime)
 		if (bIsSprintCalled)
 		{
 			bIsSprintCalled = false;
-			
+
 			BP_EndCameraSprint();
-			GetCharacterMovement()->MaxWalkSpeed = 350;			
+			GetCharacterMovement()->MaxWalkSpeed = 350;
 		}
 	}
 
@@ -242,8 +261,6 @@ void AMainCharacter::Tick(float DeltaTime)
 			SpringArm->bEnableCameraLag = true;
 		}
 	}
-
-
 }
 
 
