@@ -10,6 +10,8 @@ class UCameraComponent;
 class USkeletalMeshComponent;
 class USpringArmComponent;
 
+class UAnimMontage;
+
 
 ////// Temporal Enum States //////
 
@@ -20,6 +22,7 @@ enum class EMovementStatus :uint8
 	EMS_Walking UMETA(DisplayName = "Walking"),
 	EMS_Sprinting UMETA(DisplayName = "Sprinting"),
 	EMS_Pointing UMETA(DisplayName = "Pointing"),
+	
 
 	EMS_MAX UMETA(DisplayName = "DefaultMAX")
 
@@ -80,11 +83,16 @@ private:
 	void StarGunPoint();
 	void EndGunPoint();
 
+	/**  Shoot Left Mouse Input */
+	void StarShoot();
+	void EndShoot();
+
+
 
 protected:
 	////////////////////////////////////////////////////////////////////
 	//
-	//   Character Movement 
+	//   Character  
 	//
 	////////////////////////////////////////////////////////////////////
 
@@ -105,6 +113,12 @@ protected:
 	/** Spring Arm (Camera-Arms) for Player*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		USpringArmComponent* SpringArm;
+
+	              /////// Combat Character Components///////
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anims")
+	    UAnimMontage* ShootMontage;
+
 
 public:
 	////////////////////////////////////////////////////////////////////
@@ -156,9 +170,19 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		float CurrentVelocity;
 
-	//////// Launcher Pad Variable Key //////////
+
+	/** Launcher Pad Variable Key*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|CharacterMovement") ////////Temporal
 		bool Key = false;
+
+
+	        ////////////////////Shoot Character Variables/////////////////////
+
+	/** Pawn Current Velocity  */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bIsShooting;
+
+
 
 public:
 	////////////////////////////////////////////////////////////////////

@@ -4,11 +4,14 @@
 #include "MainCharacter.h"
 
 #include "Engine/World.h"
+#include "Animation/AnimInstance.h"
+#include "MainAnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+
 
 // Base Constructor
 AMainCharacter::AMainCharacter()
@@ -45,6 +48,7 @@ AMainCharacter::AMainCharacter()
 	bIsPointed = false;
 	bIsJumping = false;
 
+
 	//Set Default Current Velocity
 	CurrentVelocity = 0.f;
 
@@ -53,6 +57,10 @@ AMainCharacter::AMainCharacter()
 	bIsPointedCalled = false;
 	bIsJumpCalled = false;
 	bIsDelay = false;
+
+
+	//Combar Varaibles
+	bIsShooting = false;
 }
 
 
@@ -124,6 +132,25 @@ void AMainCharacter::StarGunPoint()
 void AMainCharacter::EndGunPoint()
 {
 	bIsPointed = false;
+}
+
+void AMainCharacter::StarShoot()
+{
+	bIsShooting = true;
+	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
+	if (AnimInstance && ShootMontage)
+	{
+		AnimInstance->Montage_Play(ShootMontage, 1.8f);
+		AnimInstance->Montage_JumpToSection(FName("Shoot01"), ShootMontage);
+		UE_LOG(LogTemp, Warning, TEXT("ShootCalled"));
+	}
+	UE_LOG(LogTemp, Warning, TEXT("ShootDontCalled"));
+
+}
+
+void AMainCharacter::EndShoot()
+{
+	bIsShooting = false;
 }
 
 
@@ -292,6 +319,13 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("GunPoint", IE_Pressed, this, &AMainCharacter::StarGunPoint);
 	PlayerInputComponent->BindAction("GunPoint", IE_Released, this, &AMainCharacter::EndGunPoint);
+
+	PlayerInputComponent->BindAction("GunPoint", IE_Pressed, this, &AMainCharacter::StarGunPoint);
+	PlayerInputComponent->BindAction("GunPoint", IE_Released, this, &AMainCharacter::EndGunPoint);
+
+
+	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AMainCharacter::StarShoot);
+	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AMainCharacter::EndShoot);
 
 }
 
