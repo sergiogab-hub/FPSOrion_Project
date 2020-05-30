@@ -60,7 +60,7 @@ AMainCharacter::AMainCharacter()
 	bIsDelay = false;
 
 
-	//Combar Varaibles
+	//Combat Varaibles
 	bIsShooting = false;
 	bIsUnderShootCalled = false;
 	bIsPointedShootCalled = false;
@@ -85,7 +85,6 @@ void AMainCharacter::BeginPlay()
 //   Character Player Input Movement
 //
 ////////////////////////////////////////////////////////////////////
-
 // Player Basic Movement Inputs Handles 
 void AMainCharacter::MoveForward(float value)
 {
@@ -144,7 +143,7 @@ void AMainCharacter::StarShoot()
 {
 	bIsShooting = true;
 
-	GetWorld()->GetTimerManager().SetTimer(ShootHandle, this, &AMainCharacter::Shoot, 0.095, true, 0.0);
+	GetWorld()->GetTimerManager().SetTimer(ShootHandle, this, &AMainCharacter::Shoot, 0.09, true, 0.0);
 }
 
 void AMainCharacter::EndShoot()
@@ -181,7 +180,7 @@ void AMainCharacter::Tick(float DeltaTime)
 
 ////////////////////////////////////////////////////////////////////
 //
-//   Movement Internal Function
+//   Chracter Movement / Combat Function
 //
 ////////////////////////////////////////////////////////////////////
 
@@ -305,7 +304,6 @@ void AMainCharacter::SetCameraMovement()
 	}
 
 
-
 	//Activa/Deactive -> Camera Sprinting Movements
 	if (GetMovementStatus() == EMovementStatus::EMS_Sprinting)
 	{
@@ -354,6 +352,7 @@ void AMainCharacter::SetCameraMovement()
 
 void AMainCharacter::Shoot()
 {
+	//Set Montage Play Shoot Animation
 	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
 	if (AnimInstance && ShootMontage)
 	{
@@ -423,10 +422,6 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("GunPoint", IE_Pressed, this, &AMainCharacter::StarGunPoint);
 	PlayerInputComponent->BindAction("GunPoint", IE_Released, this, &AMainCharacter::EndGunPoint);
-
-	PlayerInputComponent->BindAction("GunPoint", IE_Pressed, this, &AMainCharacter::StarGunPoint);
-	PlayerInputComponent->BindAction("GunPoint", IE_Released, this, &AMainCharacter::EndGunPoint);
-
 
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AMainCharacter::StarShoot);
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AMainCharacter::EndShoot);

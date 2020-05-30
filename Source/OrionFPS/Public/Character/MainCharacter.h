@@ -9,12 +9,10 @@
 class UCameraComponent;
 class USkeletalMeshComponent;
 class USpringArmComponent;
-
 class UAnimMontage;
 
 
 ////// Movement Enum States //////
-
 UENUM(BlueprintType)
 enum class EMovementStatus :uint8
 {
@@ -28,6 +26,7 @@ enum class EMovementStatus :uint8
 
 };
 
+
 /////// Combat Enum States /////////
 UENUM(BlueprintType)
 enum class ECombatStatus :uint8
@@ -40,8 +39,8 @@ enum class ECombatStatus :uint8
 
 };
 
-///////// Main Class /////////
 
+///////// Main Class /////////
 UCLASS()
 class ORIONFPS_API AMainCharacter : public ACharacter
 {
@@ -104,7 +103,7 @@ private:
 protected:
 	////////////////////////////////////////////////////////////////////
 	//
-	//   Character  
+	//   Character Class
 	//
 	////////////////////////////////////////////////////////////////////
 
@@ -126,11 +125,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		USpringArmComponent* SpringArm;
 
-	              /////// Combat Character Components///////
-	
+	                    ///////// Combat Character /////////
+
+	/** Under Shoot Montage*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anims")
 	    UAnimMontage* ShootMontage;
 
+	/** Pointed Shoot Montage */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anims")
 		UAnimMontage* PointedShoot_Montage;
 
@@ -138,10 +139,9 @@ protected:
 public:
 	////////////////////////////////////////////////////////////////////
 	//
-	//   Character Movement
+	//   Character Variables
 	//
 	////////////////////////////////////////////////////////////////////
-
 
 		  ////////////////Movement Character Variables//////////////
 
@@ -201,11 +201,11 @@ public:
 	  //bool bIsShootAnimEnd;
 
 	/** Open/Close BP_UnderShoot Function*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsUnderShootCalled;
 
-	/** Open/Close bp_PointedShoot Function*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	/** Open/Close BP_PointedShoot Function*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsPointedShootCalled;
 
 
@@ -245,7 +245,7 @@ public:
 public:
 	////////////////////////////////////////////////////////////////////
 	//
-	//   BP_Functions
+	//  Character BP_Functions
 	//
 	////////////////////////////////////////////////////////////////////
 
@@ -276,22 +276,22 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_MovementEvents")
 		void BP_EndCameraJump();
 
-	                /////////////Combat BP Functions /////////////////
+	                  /////////////Combat BP Functions /////////////////
 
 	/** Star Camera Under Shoot BP Camera Logic*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_MovementEventss")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
 		void BP_StarUnderShoot();
 
 	/** End Camera Under Shoot BP Camera Logic*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_MovementEvents")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
 		void BP_EndUnderShoot();
 
 	/** Star Camera Pointed SHoot BP Camera Logic*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_MovementEvents")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
 		void BP_StarPointedShoot();
 
 	/** End Camera Pointed Shoot BP Camera Logic*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_MovementEvents")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
 		void BP_EndPointedShoot();
 
 
@@ -305,20 +305,25 @@ public:
 
 	////////////////////Movement Functions//////////////////////////
 
-	UFUNCTION(BlueprintCallable, Category = "Main|MovementInternal")
+	/** Star Camera Pointed SHoot BP Camera Logic*/
+	UFUNCTION(BlueprintCallable, Category = "Main|Movement")
 		void CheckCurrentVariables();
 
-	UFUNCTION(BlueprintCallable, Category = "Main|MovementInternal")
+	/** Star Camera Pointed SHoot BP Camera Logic*/
+	UFUNCTION(BlueprintCallable, Category = "Main|Movement")
 		void SetCurrentStatus();
 
-	UFUNCTION(BlueprintCallable, Category = "Main|MovementInternal")
+	/** Star Camera Pointed SHoot BP Camera Logic*/
+	UFUNCTION(BlueprintCallable, Category = "Main|Movement")
 		void SetCameraMovement();
 
 	////////////////////Shoot Functions //////////////////////////
 
-	UFUNCTION(BlueprintCallable, Category = "Main|MovementInternal")
+	/** Shoot Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|Combat")
 		void Shoot();
 
+	/** FTimerHablde Shoot Function*/
 	FTimerHandle ShootHandle;
 	
 
