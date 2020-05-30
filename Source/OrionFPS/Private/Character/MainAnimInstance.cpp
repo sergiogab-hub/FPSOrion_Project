@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MainAnimInstance.h"
-#include "MainCharacter.h"
+#include "Character/MainAnimInstance.h"
+#include "Character/MainCharacter.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -46,7 +46,7 @@ void UMainAnimInstance::UpdateAnimationPropertys()
 	{
 		Pawn = TryGetPawnOwner();
 	}
-
+	
 	if (Pawn)
 	{
 		if (Main == nullptr)

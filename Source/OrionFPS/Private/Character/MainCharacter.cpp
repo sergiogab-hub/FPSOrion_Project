@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MainCharacter.h"
+#include "Character/MainCharacter.h"
 
 #include "Engine/World.h"
+#include "TimerManager.h"
 #include "Animation/AnimInstance.h"
-#include "MainAnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -52,6 +52,7 @@ AMainCharacter::AMainCharacter()
 	//Set Default Current Velocity
 	CurrentVelocity = 0.f;
 
+
 	// Open/Close Variables
 	bIsSprintCalled = false;
 	bIsPointedCalled = false;
@@ -61,6 +62,9 @@ AMainCharacter::AMainCharacter()
 
 	//Combar Varaibles
 	bIsShooting = false;
+	bIsUnderShootCalled = false;
+	bIsPointedShootCalled = false;
+	
 }
 
 
@@ -134,23 +138,20 @@ void AMainCharacter::EndGunPoint()
 	bIsPointed = false;
 }
 
+
+// Star/End Shoot
 void AMainCharacter::StarShoot()
 {
 	bIsShooting = true;
-	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-	if (AnimInstance && ShootMontage)
-	{
-		AnimInstance->Montage_Play(ShootMontage, 1.8f);
-		AnimInstance->Montage_JumpToSection(FName("Shoot01"), ShootMontage);
-		UE_LOG(LogTemp, Warning, TEXT("ShootCalled"));
-	}
-	UE_LOG(LogTemp, Warning, TEXT("ShootDontCalled"));
 
+	GetWorld()->GetTimerManager().SetTimer(ShootHandle, this, &AMainCharacter::Shoot, 0.095, true, 0.0);
 }
 
 void AMainCharacter::EndShoot()
 {
 	bIsShooting = false;
+	
+	GetWorldTimerManager().ClearTimer(ShootHandle);
 }
 
 
@@ -170,7 +171,7 @@ void AMainCharacter::Tick(float DeltaTime)
 	CheckCurrentVariables();
 
 	//Check/Set Current Movement Status //
-	SetCurrentMovementStatus();
+	SetCurrentStatus();
 
 	//Set Current Movement Status//
 	SetCameraMovement();
@@ -223,29 +224,88 @@ void AMainCharacter::CheckCurrentVariables()
 }
 
 // Set Current Movement Status -> Idle/Walk/Sprint/Pointed
-void AMainCharacter::SetCurrentMovementStatus()
+void AMainCharacter::SetCurrentStatus()
 {
-	if (bIsMoving && !bIsRuning && !bIsPointed)
+	///////////// Combat Status ///////////////////
+	if (!bIsShooting)
 	{
-		MovementStatus = EMovementStatus::EMS_Walking;
+		SetCombatStatus(ECombatStatus::EMS_NoCombat);
 	}
-	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay)
+	if (bIsShooting && bIsPointed)
 	{
-		MovementStatus = EMovementStatus::EMS_Sprinting;
+		SetCombatStatus(ECombatStatus::EMS_PointedFire);
+	}
+	if (bIsShooting && !bIsPointed)
+	{
+		SetCombatStatus(ECombatStatus::EMS_FireUnder);
+	}
+
+
+	///////////// Movement Status ////////////////
+	if ((bIsMoving && !bIsRuning && !bIsPointed ) || (bIsMoving && !bIsPointed && GetCombatStatus()==ECombatStatus::EMS_FireUnder ))
+	{
+		SetMovementStatus(EMovementStatus::EMS_Walking);
+	}
+	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay && GetCombatStatus() != ECombatStatus::EMS_FireUnder )
+	{
+		SetMovementStatus(EMovementStatus::EMS_Sprinting);
 	}
 	if (bIsPointed)
 	{
-		MovementStatus = EMovementStatus::EMS_Pointing;
+		SetMovementStatus(EMovementStatus::EMS_Pointing);
 	}
-	if (!bIsMoving && !bIsPointed || bIsDelay && !bIsPointed)
+	if (!bIsMoving && !bIsPointed || bIsDelay && !bIsPointed )
 	{
-		MovementStatus = EMovementStatus::EMS_Idle;
+		SetMovementStatus(EMovementStatus::EMS_Idle);
 	}
+
+	
 }
 
 // Set Camera Movement -> Sprint/Pointed/
 void AMainCharacter::SetCameraMovement()
 {
+
+	//Activa/Deactive -> Camera Shoot Under
+	if (GetCombatStatus() == ECombatStatus::EMS_FireUnder)
+	{
+		if (!bIsUnderShootCalled)
+		{
+			BP_StarUnderShoot();
+			bIsUnderShootCalled = true;
+		}
+	}
+	else
+	{
+		if (bIsUnderShootCalled)
+		{
+			BP_EndUnderShoot();
+			bIsUnderShootCalled = false;
+
+		}
+	}
+
+	//Activa/Deactive -> Camera Shoot Under
+	if (GetCombatStatus() == ECombatStatus::EMS_PointedFire)
+	{
+		if (!bIsPointedShootCalled)
+		{
+			BP_StarPointedShoot();
+			bIsPointedShootCalled = true;
+		}
+	}
+	else
+	{
+		if (bIsPointedShootCalled)
+		{
+			BP_EndPointedShoot();
+			bIsPointedShootCalled = false;
+
+		}
+	}
+
+
+
 	//Activa/Deactive -> Camera Sprinting Movements
 	if (GetMovementStatus() == EMovementStatus::EMS_Sprinting)
 	{
@@ -269,6 +329,7 @@ void AMainCharacter::SetCameraMovement()
 		}
 	}
 
+
 	//Activa/Deactive -> Camera Pointed Movements
 	if (GetMovementStatus() == EMovementStatus::EMS_Pointing)
 	{
@@ -286,6 +347,49 @@ void AMainCharacter::SetCameraMovement()
 			BP_EndCameraPointed();
 			bIsPointedCalled = false;
 			SpringArm->bEnableCameraLag = true;
+		}
+	}
+
+}
+
+void AMainCharacter::Shoot()
+{
+	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
+	if (AnimInstance && ShootMontage)
+	{
+		if (GetMovementStatus() == EMovementStatus::EMS_Pointing)
+		{
+			int32 Section = FMath::RandRange(1, 2);
+			switch (Section)
+			{
+			case 1:
+				AnimInstance->Montage_Play(PointedShoot_Montage, 2.0f);
+				AnimInstance->Montage_JumpToSection(FName("PShoot01"), PointedShoot_Montage);
+				break;
+			case 2:
+				AnimInstance->Montage_Play(PointedShoot_Montage, 2.0f);
+				AnimInstance->Montage_JumpToSection(FName("PShoot02"), PointedShoot_Montage);
+				break;
+			default:
+				break;
+			}
+		}
+		else
+		{
+			int32 Section = FMath::RandRange(1, 2);
+			switch (Section)
+			{
+			case 1:
+				AnimInstance->Montage_Play(ShootMontage, 2.0f);
+				AnimInstance->Montage_JumpToSection(FName("Shoot01"), ShootMontage);
+				break;
+			case 2:
+				AnimInstance->Montage_Play(ShootMontage, 2.0f);
+				AnimInstance->Montage_JumpToSection(FName("Shoot02"), ShootMontage);
+				break;
+			default:
+				break;
+			}
 		}
 	}
 }

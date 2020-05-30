@@ -43,7 +43,7 @@ public:
 		bool bIsInAir;
 
 	/** Current Velocity.Z  */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement) //Debug
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement) ///////Debug
 		float VelocityZ;
 
 protected:
