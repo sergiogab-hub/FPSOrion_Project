@@ -2,15 +2,19 @@
 
 
 #include "Character/MainCharacter.h"
+#include "Character/Projectile.h"
 
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+
+#include "Particles/ParticleSystemComponent.h"
 
 
 // Base Constructor
@@ -42,7 +46,7 @@ AMainCharacter::AMainCharacter()
 
 
 	// State Movement Variables
-	RotationSpeed = 45.0f;
+	RotationSpeed = 50.0f;
 	bIsRuning = false;
 	bIsMoving = false;
 	bIsPointed = false;
@@ -225,6 +229,7 @@ void AMainCharacter::CheckCurrentVariables()
 // Set Current Movement Status -> Idle/Walk/Sprint/Pointed
 void AMainCharacter::SetCurrentStatus()
 {
+
 	///////////// Combat Status ///////////////////
 	if (!bIsShooting)
 	{
@@ -284,7 +289,7 @@ void AMainCharacter::SetCameraMovement()
 		}
 	}
 
-	//Activa/Deactive -> Camera Shoot Under
+	//Activa/Deactive -> Camera Shoot Pointed
 	if (GetCombatStatus() == ECombatStatus::EMS_PointedFire)
 	{
 		if (!bIsPointedShootCalled)
@@ -354,44 +359,80 @@ void AMainCharacter::Shoot()
 {
 	//Set Montage Play Shoot Animation
 	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-	if (AnimInstance && ShootMontage)
+	if (AnimInstance && ShootMontage && PointedShoot_Montage && ProjectileClass)
 	{
-		if (GetMovementStatus() == EMovementStatus::EMS_Pointing)
+		if (MuzzleShoot1 && MuzzleShoot2 && ShellEject && SmokeMuzzle && SmokeShell)
 		{
-			int32 Section = FMath::RandRange(1, 2);
-			switch (Section)
+			if (GetMovementStatus() == EMovementStatus::EMS_Pointing)
 			{
-			case 1:
-				AnimInstance->Montage_Play(PointedShoot_Montage, 2.0f);
-				AnimInstance->Montage_JumpToSection(FName("PShoot01"), PointedShoot_Montage);
-				break;
-			case 2:
-				AnimInstance->Montage_Play(PointedShoot_Montage, 2.0f);
-				AnimInstance->Montage_JumpToSection(FName("PShoot02"), PointedShoot_Montage);
-				break;
-			default:
-				break;
+				/*Play Random Section*/
+				int32 Section = FMath::RandRange(1, 2);
+				switch (Section)
+				{
+				case 1:
+					AnimInstance->Montage_Play(PointedShoot_Montage, 2.0f);
+					AnimInstance->Montage_JumpToSection(FName("PShoot01"), PointedShoot_Montage);
+					break;
+				case 2:
+					AnimInstance->Montage_Play(PointedShoot_Montage, 2.0f);
+					AnimInstance->Montage_JumpToSection(FName("PShoot02"), PointedShoot_Montage);
+					break;
+				default:
+					break;
+				}
+
+				/*Get Socket Transforms*/
+				FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
+				FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
+				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 4.f; //Adjust Socket Rotation for pointed
+
+				/*Spawn Projectile*/
+				GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
+		
+				/** Spawn Emitters */
+				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot1, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.3f));
+				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot2, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.15f));
+				UGameplayStatics::SpawnEmitterAttached(SmokeMuzzle, Weapon, FName("Muzzle"), FVector(ForceInitToZero), GetActorLocation().ToOrientationRotator(), FVector(0.02f, 0.02f, 0.15f));
+				UGameplayStatics::SpawnEmitterAttached(SmokeShell, Weapon, FName("Smoke"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.2f, 0.6f, 0.6f));
+				UGameplayStatics::SpawnEmitterAttached(ShellEject, Weapon, FName("Shell"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
 			}
-		}
-		else
-		{
-			int32 Section = FMath::RandRange(1, 2);
-			switch (Section)
+			else 
 			{
-			case 1:
-				AnimInstance->Montage_Play(ShootMontage, 2.0f);
-				AnimInstance->Montage_JumpToSection(FName("Shoot01"), ShootMontage);
-				break;
-			case 2:
-				AnimInstance->Montage_Play(ShootMontage, 2.0f);
-				AnimInstance->Montage_JumpToSection(FName("Shoot02"), ShootMontage);
-				break;
-			default:
-				break;
+				/*Play Random Section*/
+				int32 Section = FMath::RandRange(1, 2);
+				switch (Section)
+				{
+				case 1:
+					AnimInstance->Montage_Play(ShootMontage, 2.0f);
+					AnimInstance->Montage_JumpToSection(FName("Shoot01"), ShootMontage);
+					break;
+				case 2:
+					AnimInstance->Montage_Play(ShootMontage, 2.0f);
+					AnimInstance->Montage_JumpToSection(FName("Shoot02"), ShootMontage);
+					break;
+				default:
+					break;
+				}
+
+				/*Get Socket Transforms*/
+				FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
+				FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
+			
+
+				/*Spawn Projectile*/
+				GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
+
+				/** Spawn Emitters */
+				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot1, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
+				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot2, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.3f));
+				UGameplayStatics::SpawnEmitterAttached(SmokeMuzzle, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.02f, 1.5f, 0.15f));
+				UGameplayStatics::SpawnEmitterAttached(SmokeShell, Weapon, FName("Smoke"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.15f, 0.2f, 0.7f));
+				UGameplayStatics::SpawnEmitterAttached(ShellEject, Weapon, FName("Shell"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
 			}
 		}
 	}
 }
+
 
 
 ////////////////////////////////////////////////////////////////////

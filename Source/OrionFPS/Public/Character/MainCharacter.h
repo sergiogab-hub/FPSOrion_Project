@@ -10,6 +10,8 @@ class UCameraComponent;
 class USkeletalMeshComponent;
 class USpringArmComponent;
 class UAnimMontage;
+class AProjectile;
+class UParticleSystem;
 
 
 ////// Movement Enum States //////
@@ -125,15 +127,44 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		USpringArmComponent* SpringArm;
 
-	                    ///////// Combat Character /////////
+
+	                 /////////// Combat Character ///////////
 
 	/** Under Shoot Montage*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anims")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
 	    UAnimMontage* ShootMontage;
 
 	/** Pointed Shoot Montage */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anims")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
 		UAnimMontage* PointedShoot_Montage;
+
+	/** Muzzle Particle System */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
+		UParticleSystem* MuzzleShoot1;
+
+	/** Muzzle Particle System */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
+		UParticleSystem* MuzzleShoot2;
+
+	/** Shell Eject Particle System */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
+		UParticleSystem* ShellEject;
+
+	/** Shell Eject Particle System */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
+		UParticleSystem* SmokeMuzzle;
+
+	/** Shell Eject Particle System */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
+		UParticleSystem* SmokeShell;
+
+
+	                   ///////// Projectile Class /////////
+
+	/** Projectile class to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+		TSubclassOf<AProjectile> ProjectileClass;
+
 
 
 public:
@@ -191,14 +222,11 @@ public:
 		bool Key = false;
 
 
-	        ////////////////////Shoot Character Variables/////////////////////
+	           ////////////////////Shoot Character/////////////////////
 
-	/** Pawn Current Velocity  */
+	/** Shooting Control Variable  */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsShooting;
-
-	////UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|CharacterCombat") ////////Debug
-	  //bool bIsShootAnimEnd;
 
 	/** Open/Close BP_UnderShoot Function*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
@@ -207,6 +235,7 @@ public:
 	/** Open/Close BP_PointedShoot Function*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsPointedShootCalled;
+
 
 
 
@@ -306,21 +335,21 @@ public:
 	////////////////////Movement Functions//////////////////////////
 
 	/** Star Camera Pointed SHoot BP Camera Logic*/
-	UFUNCTION(BlueprintCallable, Category = "Main|Movement")
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterMovement")
 		void CheckCurrentVariables();
 
 	/** Star Camera Pointed SHoot BP Camera Logic*/
-	UFUNCTION(BlueprintCallable, Category = "Main|Movement")
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterMovement")
 		void SetCurrentStatus();
 
 	/** Star Camera Pointed SHoot BP Camera Logic*/
-	UFUNCTION(BlueprintCallable, Category = "Main|Movement")
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterMovement")
 		void SetCameraMovement();
 
 	////////////////////Shoot Functions //////////////////////////
 
 	/** Shoot Function*/
-	UFUNCTION(BlueprintCallable, Category = "Main|Combat")
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void Shoot();
 
 	/** FTimerHablde Shoot Function*/
