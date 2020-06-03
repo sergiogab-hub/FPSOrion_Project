@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Projectile.generated.h"
+#include "OR_Projectile.generated.h"
 
 class UProjectileMovementComponent;
 class UStaticMeshComponent;

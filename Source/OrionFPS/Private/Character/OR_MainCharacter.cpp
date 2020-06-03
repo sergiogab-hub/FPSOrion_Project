@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/MainCharacter.h"
-#include "Character/Projectile.h"
+#include "Character/OR_MainCharacter.h"
+#include "Character/OR_Projectile.h"
 
 #include "Engine/World.h"
 #include "TimerManager.h"
@@ -51,6 +51,7 @@ AMainCharacter::AMainCharacter()
 	bIsMoving = false;
 	bIsPointed = false;
 	bIsJumping = false;
+	bIsReload = false;
 
 
 	//Set Default Current Velocity
@@ -68,6 +69,7 @@ AMainCharacter::AMainCharacter()
 	bIsShooting = false;
 	bIsUnderShootCalled = false;
 	bIsPointedShootCalled = false;
+	Ammo = 100;
 	
 }
 
@@ -92,11 +94,19 @@ void AMainCharacter::BeginPlay()
 // Player Basic Movement Inputs Handles 
 void AMainCharacter::MoveForward(float value)
 {
+	if (value == 0.0) { return;}
+	bIsMoving = true;
+	UpdatePlayerProperties();
 	AddMovementInput(GetActorForwardVector(), value);
+	
 }
 void AMainCharacter::MoveRight(float value)
 {
+	if (value == 0.0) { return;}
+	bIsMoving = true;
+	UpdatePlayerProperties();
 	AddMovementInput(GetActorRightVector(), value);
+	
 }
 void AMainCharacter::RotatePitch(float value)
 {
@@ -104,6 +114,7 @@ void AMainCharacter::RotatePitch(float value)
 }
 void AMainCharacter::RotateYaw(float value)
 {
+	if (FMath::Abs(value) < 0.001) { return; }
 	AddControllerYawInput(value * RotationSpeed * GetWorld()->GetDeltaSeconds());
 }
 
@@ -112,6 +123,7 @@ void AMainCharacter::RotateYaw(float value)
 void AMainCharacter::StarJump()
 {
 	Jump();
+	UpdatePlayerProperties();
 }
 void AMainCharacter::EndJump()
 {
@@ -123,10 +135,13 @@ void AMainCharacter::EndJump()
 void AMainCharacter::StarSprint()
 {
 	bIsRuning = true;
+	UpdatePlayerProperties();
+	
 }
 void AMainCharacter::StopSprint()
 {
 	bIsRuning = false;
+	UpdatePlayerProperties();
 }
 
 
@@ -134,11 +149,12 @@ void AMainCharacter::StopSprint()
 void AMainCharacter::StarGunPoint()
 {
 	bIsPointed = true;
-
+	UpdatePlayerProperties();
 }
 void AMainCharacter::EndGunPoint()
 {
 	bIsPointed = false;
+	UpdatePlayerProperties();
 }
 
 
@@ -146,15 +162,34 @@ void AMainCharacter::EndGunPoint()
 void AMainCharacter::StarShoot()
 {
 	bIsShooting = true;
-
+	UpdatePlayerProperties();
 	GetWorld()->GetTimerManager().SetTimer(ShootHandle, this, &AMainCharacter::Shoot, 0.09, true, 0.0);
 }
 
 void AMainCharacter::EndShoot()
 {
 	bIsShooting = false;
-	
+	UpdatePlayerProperties();
 	GetWorldTimerManager().ClearTimer(ShootHandle);
+}
+
+void AMainCharacter::Reload()
+{
+	bIsReload = true;
+	
+	if (IsValid(ReloadMontage))
+	{
+		UAnimInstance* AnimInstance = Arms->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(ReloadMontage, 1.2f);
+			AnimInstance->Montage_JumpToSection(FName("Reload"), ReloadMontage);
+		}
+		
+		
+
+		//UGameplayStatics::SpawnEmitterAttached(SmokeMuzzle, Weapon, FName("Reload"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.1f));
+	}
 }
 
 
@@ -167,39 +202,14 @@ void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Get CurretVelocity every tick
+	// Get CurretVelocity 
 	CurrentVelocity = GetVelocity().Size();
 
-	//Check Main Basic Variables//
-	CheckCurrentVariables();
-
-	//Check/Set Current Movement Status //
-	SetCurrentStatus();
-
-	//Set Current Movement Status//
-	SetCameraMovement();
-
-}
-
-
-////////////////////////////////////////////////////////////////////
-//
-//   Chracter Movement / Combat Function
-//
-////////////////////////////////////////////////////////////////////
-
-// Check Movement/Jump State
-void AMainCharacter::CheckCurrentVariables()
-{
-	////Set Moving Control Varible/////
-	if (CurrentVelocity != 0)
-	{
-		bIsMoving = true;
-
-	}
-	else
+	// Check Moving False
+	if (CurrentVelocity == 0)
 	{
 		bIsMoving = false;
+		UpdatePlayerProperties();
 	}
 
 	///// Set Jumping Control ////
@@ -226,11 +236,21 @@ void AMainCharacter::CheckCurrentVariables()
 	}
 }
 
-// Set Current Movement Status -> Idle/Walk/Sprint/Pointed
-void AMainCharacter::SetCurrentStatus()
+
+////////////////////////////////////////////////////////////////////
+//
+//   Chracter Movement / Combat Function
+//
+////////////////////////////////////////////////////////////////////
+
+
+// UpdatePlayerPropertys // Status-Camera
+void AMainCharacter::UpdatePlayerProperties()
 {
 
-	///////////// Combat Status ///////////////////
+	               /////////// Player Status////////////
+
+	//Combat Status
 	if (!bIsShooting)
 	{
 		SetCombatStatus(ECombatStatus::EMS_NoCombat);
@@ -245,8 +265,8 @@ void AMainCharacter::SetCurrentStatus()
 	}
 
 
-	///////////// Movement Status ////////////////
-	if ((bIsMoving && !bIsRuning && !bIsPointed ) || (bIsMoving && !bIsPointed && GetCombatStatus()==ECombatStatus::EMS_FireUnder ))
+	//Movement Status
+	if ((bIsMoving && !bIsRuning && !bIsPointed && !bIsReload)  || (bIsMoving && !bIsPointed && GetCombatStatus()==ECombatStatus::EMS_FireUnder ))
 	{
 		SetMovementStatus(EMovementStatus::EMS_Walking);
 	}
@@ -262,13 +282,15 @@ void AMainCharacter::SetCurrentStatus()
 	{
 		SetMovementStatus(EMovementStatus::EMS_Idle);
 	}
+	if (bIsReload)
+	{
+		SetMovementStatus(EMovementStatus::EMS_Reload);
+	}
 
 	
-}
 
-// Set Camera Movement -> Sprint/Pointed/
-void AMainCharacter::SetCameraMovement()
-{
+
+	              /////////////Camera Movement//////////////
 
 	//Activa/Deactive -> Camera Shoot Under
 	if (GetCombatStatus() == ECombatStatus::EMS_FireUnder)
@@ -355,13 +377,15 @@ void AMainCharacter::SetCameraMovement()
 
 }
 
+
 void AMainCharacter::Shoot()
 {
 	//Set Montage Play Shoot Animation
 	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-	if (AnimInstance && ShootMontage && PointedShoot_Montage && ProjectileClass)
+
+	if (IsValid(AnimInstance) && IsValid(ShootMontage) && IsValid(PointedShoot_Montage) && IsValid(ProjectileClass))
 	{
-		if (MuzzleShoot1 && MuzzleShoot2 && ShellEject && SmokeMuzzle && SmokeShell)
+		if (IsValid(MuzzleShoot1) && IsValid(MuzzleShoot2) && IsValid(ShellEject) && IsValid(SmokeMuzzle) && IsValid(SmokeShell))
 		{
 			if (GetMovementStatus() == EMovementStatus::EMS_Pointing)
 			{
@@ -466,6 +490,12 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AMainCharacter::StarShoot);
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AMainCharacter::EndShoot);
+
+	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AMainCharacter::StarShoot);
+	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AMainCharacter::EndShoot);
+
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AMainCharacter::Reload);
+
 
 }
 

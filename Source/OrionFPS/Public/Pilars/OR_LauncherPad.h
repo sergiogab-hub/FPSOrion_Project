@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "LauncherPad.generated.h"
+#include "OR_LauncherPad.generated.h"
 
 class USphereComponent;
 class UStaticMeshComponent;

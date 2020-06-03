@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Pilars/LauncherPad.h"
-#include "Character/MainCharacter.h"
+#include "Pilars/OR_LauncherPad.h"
+#include "Character/OR_MainCharacter.h"
 
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -51,10 +51,10 @@ void ALauncherPad::Tick(float DeltaTime)
 ////////////////////////////////////////////////////////////////////
 void ALauncherPad::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor)
+	if (IsValid(OtherActor))
 	{
 		AMainCharacter* Main = Cast<AMainCharacter>(OtherActor);
-		if (Main)
+		if (IsValid(Main))
 		{
 			if (Main->Key)
 			{

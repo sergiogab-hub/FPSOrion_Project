@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "MainCharacter.generated.h"
+#include "OR_MainCharacter.generated.h"
 
 class UCameraComponent;
 class USkeletalMeshComponent;
@@ -22,6 +22,7 @@ enum class EMovementStatus :uint8
 	EMS_Walking UMETA(DisplayName = "Walking"),
 	EMS_Sprinting UMETA(DisplayName = "Sprinting"),
 	EMS_Pointing UMETA(DisplayName = "Pointing"),
+	EMS_Reload UMETA(DisplayName = "Reload"),
 	
 
 	EMS_MAX UMETA(DisplayName = "DefaultMAX")
@@ -36,6 +37,8 @@ enum class ECombatStatus :uint8
 	EMS_NoCombat UMETA(DisplayName = "NoCombat"),
 	EMS_FireUnder UMETA(DisplayName = "FireUnder"),
 	EMS_PointedFire UMETA(DisplayName = "PointedFire"),
+	
+	
 
 	EMS_MAX UMETA(DisplayName = "DefaultMAX")
 
@@ -100,7 +103,7 @@ private:
 	void StarShoot();
 	void EndShoot();
 
-
+	void Reload();
 
 protected:
 	////////////////////////////////////////////////////////////////////
@@ -137,6 +140,10 @@ protected:
 	/** Pointed Shoot Montage */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
 		UAnimMontage* PointedShoot_Montage;
+
+	/** Reload Montage */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
+		UAnimMontage* ReloadMontage;
 
 	/** Muzzle Particle System */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
@@ -196,6 +203,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		bool bIsPointed;
 
+	/** Control Variable Pointed Weapon State*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		bool bIsReload;
+
 	/** Open/Close BP_Pointed Function*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		bool bIsPointedCalled;
@@ -236,6 +247,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsPointedShootCalled;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+	     int32 Ammo;
 
 
 
@@ -253,8 +266,7 @@ public:
 		EMovementStatus MovementStatus;
 
 	/** Set the New Movement Status*/
-	FORCEINLINE void SetMovementStatus(EMovementStatus Status) { MovementStatus = Status; } //Temporaly No Const
-
+	FORCEINLINE void SetMovementStatus(EMovementStatus Status) { MovementStatus = Status; } 
 	/** Get Current Movement Status*/
 	FORCEINLINE EMovementStatus GetMovementStatus()  const { return MovementStatus; } 
 
@@ -266,8 +278,7 @@ public:
 		ECombatStatus CombatStatus;
 
 	/** Set the New Movement Status*/
-	FORCEINLINE void SetCombatStatus(ECombatStatus Status) { CombatStatus = Status; } //Temporaly No Const
-
+	FORCEINLINE void SetCombatStatus(ECombatStatus Status) { CombatStatus = Status; } 
 	/** Get Current Movement Status*/
 	FORCEINLINE ECombatStatus GetCombatStatus() const { return CombatStatus; } 
 
@@ -334,17 +345,12 @@ public:
 
 	////////////////////Movement Functions//////////////////////////
 
-	/** Star Camera Pointed SHoot BP Camera Logic*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterMovement")
-		void CheckCurrentVariables();
 
 	/** Star Camera Pointed SHoot BP Camera Logic*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterMovement")
-		void SetCurrentStatus();
+		void UpdatePlayerProperties();
 
-	/** Star Camera Pointed SHoot BP Camera Logic*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterMovement")
-		void SetCameraMovement();
+
 
 	////////////////////Shoot Functions //////////////////////////
 

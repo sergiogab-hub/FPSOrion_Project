@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Character/Projectile.h"
-#include "Character/MainCharacter.h"
+#include "Character/OR_Projectile.h"
+#include "Character/OR_MainCharacter.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -52,7 +52,7 @@ AProjectile::AProjectile()
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	
-	if ((OtherActor) && (OtherActor != this) && (OtherComp))
+	if ((IsValid(OtherActor)) && (OtherActor != this) && (IsValid(OtherComp)))
 	{
 		if (ImpactParticles && ImpactParticlesSmoke)
 		{
