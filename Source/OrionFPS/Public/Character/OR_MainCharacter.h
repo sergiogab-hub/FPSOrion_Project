@@ -22,7 +22,7 @@ enum class EMovementStatus :uint8
 	EMS_Walking UMETA(DisplayName = "Walking"),
 	EMS_Sprinting UMETA(DisplayName = "Sprinting"),
 	EMS_Pointing UMETA(DisplayName = "Pointing"),
-	EMS_Reload UMETA(DisplayName = "Reload"),
+	//EMS_Reload UMETA(DisplayName = "Reload"),
 	
 
 	EMS_MAX UMETA(DisplayName = "DefaultMAX")
@@ -37,6 +37,7 @@ enum class ECombatStatus :uint8
 	EMS_NoCombat UMETA(DisplayName = "NoCombat"),
 	EMS_FireUnder UMETA(DisplayName = "FireUnder"),
 	EMS_PointedFire UMETA(DisplayName = "PointedFire"),
+	EMS_Reload UMETA(DisplayName = "Reload"),
 	
 	
 
@@ -103,7 +104,8 @@ private:
 	void StarShoot();
 	void EndShoot();
 
-	void Reload();
+	void StarReload();
+	
 
 protected:
 	////////////////////////////////////////////////////////////////////
@@ -141,10 +143,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
 		UAnimMontage* PointedShoot_Montage;
 
-	/** Reload Montage */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
-		UAnimMontage* ReloadMontage;
-
 	/** Muzzle Particle System */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
 		UParticleSystem* MuzzleShoot1;
@@ -164,6 +162,15 @@ protected:
 	/** Shell Eject Particle System */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
 		UParticleSystem* SmokeShell;
+
+
+	/** Reload Montage */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
+		UAnimMontage* ReloadMontage;
+
+	/** SmokeReload ParticleSystem */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
+		UParticleSystem* SmokeReload;
 
 
 	                   ///////// Projectile Class /////////
@@ -227,7 +234,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		float CurrentVelocity;
 
-
 	/** Launcher Pad Variable Key*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|CharacterMovement") ////////Temporal
 		bool Key = false;
@@ -247,6 +253,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsPointedShootCalled;
 
+	/** CountAmmo*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
 	     int32 Ammo;
 
@@ -361,6 +368,9 @@ public:
 	/** FTimerHablde Shoot Function*/
 	FTimerHandle ShootHandle;
 	
+	UFUNCTION(BlueprintCallable , Category= "Main|CharacterMovement")
+	void EndReload();
+
 
 
 };

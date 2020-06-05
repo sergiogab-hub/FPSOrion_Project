@@ -148,6 +148,12 @@ void AMainCharacter::StopSprint()
 // Star / End - Gun Pointed Right Mouse Method
 void AMainCharacter::StarGunPoint()
 {
+	if (GetCombatStatus() == ECombatStatus::EMS_Reload)
+	{
+		bIsReload = false;
+		UAnimInstance* AnimInstance = Arms->GetAnimInstance();
+		AnimInstance->StopAllMontages(0.2);
+	}
 	bIsPointed = true;
 	UpdatePlayerProperties();
 }
@@ -161,6 +167,18 @@ void AMainCharacter::EndGunPoint()
 // Star/End Shoot
 void AMainCharacter::StarShoot()
 {
+    if (Ammo <= 0) 
+	{ 
+		StarReload(); 
+	    return; 
+	}
+    if (GetCombatStatus() == ECombatStatus::EMS_Reload)	
+	{
+		bIsReload = false; 
+		UAnimInstance* AnimInstance = Arms->GetAnimInstance();
+		AnimInstance->StopAllMontages(0.2); 
+	}
+
 	bIsShooting = true;
 	UpdatePlayerProperties();
 	GetWorld()->GetTimerManager().SetTimer(ShootHandle, this, &AMainCharacter::Shoot, 0.09, true, 0.0);
@@ -170,26 +188,48 @@ void AMainCharacter::EndShoot()
 {
 	bIsShooting = false;
 	UpdatePlayerProperties();
-	GetWorldTimerManager().ClearTimer(ShootHandle);
+	GetWorldTimerManager().ClearTimer(ShootHandle);		
 }
 
-void AMainCharacter::Reload()
-{
-	bIsReload = true;
-	
-	if (IsValid(ReloadMontage))
-	{
-		UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(ReloadMontage, 1.2f);
-			AnimInstance->Montage_JumpToSection(FName("Reload"), ReloadMontage);
-		}
-		
-		
 
-		//UGameplayStatics::SpawnEmitterAttached(SmokeMuzzle, Weapon, FName("Reload"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.1f));
+
+//Star/ End Reload
+void AMainCharacter::StarReload()
+{
+    if (Ammo >= 100) { return;}
+
+	if (GetCombatStatus() == ECombatStatus::EMS_Reload) { return; }
+
+    if (GetCombatStatus()==ECombatStatus::EMS_FireUnder || GetCombatStatus() == ECombatStatus::EMS_PointedFire) { EndShoot();}
+
+	bIsReload = true;
+	UpdatePlayerProperties();
+
+   if (GetCombatStatus() == ECombatStatus::EMS_Reload)
+	 {
+		if (IsValid(ReloadMontage))
+		{
+			UAnimInstance* AnimInstance = Arms->GetAnimInstance();
+			if (AnimInstance)
+			{
+				AnimInstance->Montage_Play(ReloadMontage, 1.2f);
+				AnimInstance->Montage_JumpToSection(FName("Reload"), ReloadMontage);
+			}
+			if (IsValid(SmokeReload))
+			{
+				UGameplayStatics::SpawnEmitterAttached(SmokeReload, Weapon, FName("RifleMag"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.13f, 0.01, 0.01f));
+			}
+      	}
 	}
+}
+
+void AMainCharacter::EndReload()
+{
+	Ammo = 100;
+	bIsReload = false;
+	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
+	AnimInstance->StopAllMontages(0.3);
+	UpdatePlayerProperties();	
 }
 
 
@@ -248,10 +288,10 @@ void AMainCharacter::Tick(float DeltaTime)
 void AMainCharacter::UpdatePlayerProperties()
 {
 
-	               /////////// Player Status////////////
+	/////////// Player Status////////////
 
-	//Combat Status
-	if (!bIsShooting)
+//Combat Status
+	if (!bIsShooting && !bIsReload)
 	{
 		SetCombatStatus(ECombatStatus::EMS_NoCombat);
 	}
@@ -263,28 +303,28 @@ void AMainCharacter::UpdatePlayerProperties()
 	{
 		SetCombatStatus(ECombatStatus::EMS_FireUnder);
 	}
+	if (bIsReload && !bIsShooting)
+	{
+		SetCombatStatus(ECombatStatus::EMS_Reload);
+	}
 
 
 	//Movement Status
-	if ((bIsMoving && !bIsRuning && !bIsPointed && !bIsReload)  || (bIsMoving && !bIsPointed && GetCombatStatus()==ECombatStatus::EMS_FireUnder ))
+	if ((bIsMoving && !bIsRuning && !bIsPointed ) || (bIsMoving && !bIsPointed && GetCombatStatus() == ECombatStatus::EMS_FireUnder) || (bIsMoving && GetCombatStatus() == ECombatStatus::EMS_Reload))
 	{
 		SetMovementStatus(EMovementStatus::EMS_Walking);
 	}
-	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay && GetCombatStatus() != ECombatStatus::EMS_FireUnder )
+	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay && GetCombatStatus() != ECombatStatus::EMS_FireUnder && !bIsReload)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Sprinting);
 	}
-	if (bIsPointed)
+	if (bIsPointed && GetCombatStatus() != ECombatStatus::EMS_Reload)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Pointing);
 	}
-	if (!bIsMoving && !bIsPointed || bIsDelay && !bIsPointed )
+	if (!bIsMoving && !bIsPointed || bIsDelay && !bIsPointed || !bIsMoving && GetCombatStatus() == ECombatStatus::EMS_Reload)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Idle);
-	}
-	if (bIsReload)
-	{
-		SetMovementStatus(EMovementStatus::EMS_Reload);
 	}
 
 	
@@ -380,6 +420,12 @@ void AMainCharacter::UpdatePlayerProperties()
 
 void AMainCharacter::Shoot()
 {
+	if (Ammo <= 0) 
+	{
+		EndShoot();
+		StarReload();
+		return;
+	}
 	//Set Montage Play Shoot Animation
 	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
 
@@ -454,6 +500,7 @@ void AMainCharacter::Shoot()
 				UGameplayStatics::SpawnEmitterAttached(ShellEject, Weapon, FName("Shell"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
 			}
 		}
+		Ammo--;
 	}
 }
 
@@ -494,7 +541,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AMainCharacter::StarShoot);
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AMainCharacter::EndShoot);
 
-	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AMainCharacter::Reload);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AMainCharacter::StarReload);
 
 
 }
