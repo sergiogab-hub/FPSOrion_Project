@@ -103,6 +103,7 @@ private:
 	/**  Shoot Left Mouse Input */
 	void StarShoot();
 	void EndShoot();
+	void EndReloadShoot();
 
 	void StarReload();
 	
@@ -171,6 +172,16 @@ protected:
 	/** SmokeReload ParticleSystem */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
 		UParticleSystem* SmokeReload;
+
+
+	/** Ultimate Particle System */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
+		UParticleSystem* FinalGun;
+
+
+
+
+
 
 
 	                   ///////// Projectile Class /////////
@@ -245,6 +256,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsShooting;
 
+	/** Shooting Control Variable  */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bKeyShootPressed;
+
 	/** Open/Close BP_UnderShoot Function*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsUnderShootCalled;
@@ -257,6 +272,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
 	     int32 Ammo;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bIsUltimate;
+
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+	FVector MuzzleGunLocation;
 
 
 public:
@@ -364,6 +385,11 @@ public:
 	/** Shoot Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void Shoot();
+
+	/** Shoot Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+		void UltimateShoot();
+
 
 	/** FTimerHablde Shoot Function*/
 	FTimerHandle ShootHandle;

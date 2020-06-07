@@ -69,7 +69,9 @@ AMainCharacter::AMainCharacter()
 	bIsShooting = false;
 	bIsUnderShootCalled = false;
 	bIsPointedShootCalled = false;
-	Ammo = 100;
+	bKeyShootPressed = false;
+	bIsUltimate = false;
+	Ammo = 50;
 	
 }
 
@@ -180,15 +182,27 @@ void AMainCharacter::StarShoot()
 	}
 
 	bIsShooting = true;
+	bKeyShootPressed = true;
 	UpdatePlayerProperties();
 	GetWorld()->GetTimerManager().SetTimer(ShootHandle, this, &AMainCharacter::Shoot, 0.09, true, 0.0);
+
+	
 }
 
 void AMainCharacter::EndShoot()
 {
 	bIsShooting = false;
+	bKeyShootPressed = false;
 	UpdatePlayerProperties();
 	GetWorldTimerManager().ClearTimer(ShootHandle);		
+}
+
+
+void AMainCharacter::EndReloadShoot()
+{
+	bIsShooting = false;
+	UpdatePlayerProperties();
+	GetWorldTimerManager().ClearTimer(ShootHandle);
 }
 
 
@@ -196,11 +210,11 @@ void AMainCharacter::EndShoot()
 //Star/ End Reload
 void AMainCharacter::StarReload()
 {
-    if (Ammo >= 100) { return;}
+    if (Ammo >= 50) { return;}
 
 	if (GetCombatStatus() == ECombatStatus::EMS_Reload) { return; }
 
-    if (GetCombatStatus()==ECombatStatus::EMS_FireUnder || GetCombatStatus() == ECombatStatus::EMS_PointedFire) { EndShoot();}
+    if (GetCombatStatus()==ECombatStatus::EMS_FireUnder || GetCombatStatus() == ECombatStatus::EMS_PointedFire) { EndReloadShoot();}
 
 	bIsReload = true;
 	UpdatePlayerProperties();
@@ -210,7 +224,7 @@ void AMainCharacter::StarReload()
 		if (IsValid(ReloadMontage))
 		{
 			UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-			if (AnimInstance)
+			if (IsValid(AnimInstance))
 			{
 				AnimInstance->Montage_Play(ReloadMontage, 1.2f);
 				AnimInstance->Montage_JumpToSection(FName("Reload"), ReloadMontage);
@@ -225,11 +239,14 @@ void AMainCharacter::StarReload()
 
 void AMainCharacter::EndReload()
 {
-	Ammo = 100;
+	Ammo = 50;
 	bIsReload = false;
 	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-	AnimInstance->StopAllMontages(0.3);
+	AnimInstance->StopAllMontages(0.4);
 	UpdatePlayerProperties();	
+
+	if (bKeyShootPressed) { StarShoot(); }
+
 }
 
 
@@ -274,6 +291,8 @@ void AMainCharacter::Tick(float DeltaTime)
 			BP_EndCameraJump();
 		}
 	}
+
+	//MuzzleGunLocation = Weapon->GetSocketLocation("Muzzle");
 }
 
 
@@ -457,7 +476,8 @@ void AMainCharacter::Shoot()
 				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 4.f; //Adjust Socket Rotation for pointed
 
 				/*Spawn Projectile*/
-				GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
+				AProjectile* Projectile= GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
+				Projectile->SetMain(this);
 		
 				/** Spawn Emitters */
 				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot1, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.3f));
@@ -487,21 +507,31 @@ void AMainCharacter::Shoot()
 				/*Get Socket Transforms*/
 				FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
 				FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
+				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 2.f;
+				MuzzleRotation.Yaw = MuzzleRotation.Yaw + 2;
+				
 			
-
 				/*Spawn Projectile*/
-				GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
+				AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
+				Projectile->SetMain(this);
 
 				/** Spawn Emitters */
 				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot1, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
 				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot2, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.3f));
-				UGameplayStatics::SpawnEmitterAttached(SmokeMuzzle, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.02f, 1.5f, 0.15f));
+				UGameplayStatics::SpawnEmitterAttached(SmokeMuzzle, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.02f, 1.5f, 0.15f)); 
 				UGameplayStatics::SpawnEmitterAttached(SmokeShell, Weapon, FName("Smoke"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.15f, 0.2f, 0.7f));
 				UGameplayStatics::SpawnEmitterAttached(ShellEject, Weapon, FName("Shell"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
 			}
 		}
 		Ammo--;
 	}
+}
+
+void AMainCharacter::UltimateShoot()
+{
+	FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
+	FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
+	UGameplayStatics::SpawnEmitterAttached(FinalGun, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.1f));
 }
 
 

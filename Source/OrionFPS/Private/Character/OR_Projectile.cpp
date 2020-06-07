@@ -5,8 +5,10 @@
 #include "Character/OR_MainCharacter.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -56,9 +58,22 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	{
 		if (ImpactParticles && ImpactParticlesSmoke)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, Hit.Location,FRotator(0.f), FVector(1.0f), true);
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmoke, Hit.Location, FRotator(0.f), FVector(0.5f), true);
-		    Destroy();
+
+			if (IsValid(MainCharacter))
+			{
+				FRotator RotationImpact = UKismetMathLibrary::FindLookAtRotation(Hit.Location, MainCharacter->GetActorLocation());
+
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, Hit.Location, RotationImpact, FVector(1.0f), true);//1.0
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmoke, Hit.Location, RotationImpact, FVector(0.5f), true);//0.5
+				/*UParticleSystemComponent* trace = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TraceImpact, MainCharacter->MuzzleGunLocation);
+				if (IsValid(TraceImpact))
+				{
+					
+					trace->SetVectorParameter(ParamName, Hit.Location);
+				}*/
+				Destroy();
+			}
+			
 		}
 	}
 	

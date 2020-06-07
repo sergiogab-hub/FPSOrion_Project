@@ -10,6 +10,9 @@ class UProjectileMovementComponent;
 class UStaticMeshComponent;
 class UParticleSystem;
 class USphereComponent;
+class AMainCharacter;
+
+
 
 
 UCLASS()
@@ -21,6 +24,13 @@ public:
 	// Sets default values for this actor's properties
 	AProjectile();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
+		 AMainCharacter* MainCharacter;
+
+	void SetMain (AMainCharacter* Main) { MainCharacter = Main; }
+
+
+	
 
 protected:
 	
@@ -45,6 +55,13 @@ protected:
 	/** Impact Particle System */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 		UParticleSystem* ImpactParticlesSmoke;
+
+	/** Impact Particle System 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+		UParticleSystem* TraceImpact;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+		 FName ParamName; */
 
 
 
