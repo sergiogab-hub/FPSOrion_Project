@@ -14,7 +14,7 @@
 // Sets default values
 AProjectile::AProjectile()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	// Collision 
@@ -23,7 +23,7 @@ AProjectile::AProjectile()
 	CollisionComp->SetCollisionProfileName("Projectile");
 	CollisionComp->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);	// set up a notification for when this component hits something blocking
 
-	
+
 	RootComponent = CollisionComp;
 
 	// Mesh
@@ -41,7 +41,8 @@ AProjectile::AProjectile()
 
 	//Projectie Life
 	InitialLifeSpan = 2.0f;
-	
+
+	Damage = 10.f;
 	
 	
 
@@ -68,9 +69,10 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 
 					if (Name == FString("Enemy_5"))
 					{
-						UGameplayStatics::ApplyPointDamage(Hit.GetActor(), 10, MainCharacter->GetActorRotation().Vector(), Hit, MainCharacter->GetController(), this, DamageType);
-						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesEnemy, Hit.Location, RotationImpact, FVector(0.4f), true);//1.0
-						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmokeEnemy, Hit.Location, RotationImpact, FVector(0.2f), true);//0.5
+						UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, MainCharacter->GetActorRotation().Vector(), Hit, MainCharacter->GetController(), this, DamageType);
+
+						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesEnemy, Hit.Location, RotationImpact, FVector(0.4f), true);//0.4
+						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmokeEnemy, Hit.Location, RotationImpact, FVector(0.2f), true);//0.2
 					}
 					else 
 					{

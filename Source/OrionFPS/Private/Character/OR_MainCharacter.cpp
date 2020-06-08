@@ -12,9 +12,9 @@
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-#include "Particles/ParticleSystemComponent.h"
 
 
 // Base Constructor
@@ -205,6 +205,8 @@ void AMainCharacter::EndGunPoint()
 ////////////////////
 void AMainCharacter::StarShoot()
 {
+	bIsKeyShootPressed = true;
+
 	/** Check sufuciente Ammo */
 	if (Ammo <= 0)
 	{
@@ -222,7 +224,6 @@ void AMainCharacter::StarShoot()
 
 	/** Set Variables */
 	bIsShooting = true;
-	bIsKeyShootPressed = true;
 	UpdatePlayerProperties();
 
 	/** Tarea Cambiar Modo Rifle*/
@@ -301,7 +302,7 @@ void AMainCharacter::EndReload()
 
 	/** End Instance*/
 	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-	AnimInstance->StopAllMontages(0.8);
+	AnimInstance->StopAllMontages(0.5);
 	UpdatePlayerProperties();	
 
 	/** If Left Mouse Button Still Pressed Continue Shooting */
@@ -494,12 +495,13 @@ void AMainCharacter::UpdatePlayerProperties()
 
 }
 
+
+
 ////////////////////////////////////////////////////////////////////
 //
 //  Combat Function
 //
 ////////////////////////////////////////////////////////////////////
-
 void AMainCharacter::Shoot()
 {
 	if (Ammo <= 0) 
@@ -508,6 +510,7 @@ void AMainCharacter::Shoot()
 		StarReload();
 		return;
 	}
+
 	//Set Montage Play Shoot Animation
 	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
 
@@ -540,7 +543,7 @@ void AMainCharacter::Shoot()
 
 				/*Spawn Projectile*/
 				AProjectile* Projectile= GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
-				Projectile->SetMain(this);
+				Projectile->SetMain(this); // Set This to Projectile
 		
 				/** Spawn Emitters */
 				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot1, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.3f));
@@ -570,13 +573,13 @@ void AMainCharacter::Shoot()
 				/*Get Socket Transforms*/
 				FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
 				FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
-				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 2.5f;
-				MuzzleRotation.Yaw = MuzzleRotation.Yaw + 2;
+				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 2.5f; //Adjust Socket Rotation for Fire Under
+				MuzzleRotation.Yaw = MuzzleRotation.Yaw + 2;//Adjust Socket Rotation Fire Under
 				
 			
 				/*Spawn Projectile*/
 				AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
-				Projectile->SetMain(this);
+				Projectile->SetMain(this); // Set This to Projectile
 
 				/** Spawn Emitters */
 				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot1, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));

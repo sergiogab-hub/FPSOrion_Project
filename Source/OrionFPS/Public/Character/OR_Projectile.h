@@ -64,13 +64,19 @@ protected:
 	/** Impact Particle System */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 		UParticleSystem* ImpactParticlesEnemy;
+
 	/** Impact Particle System */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 		UParticleSystem* ImpactParticlesSmokeEnemy;
 
-
+	/** Damage Type */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 		TSubclassOf<UDamageType> DamageType;
+
+	/** Bullet Damage */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+		float Damage;
+
 
 
 	/** Impact Particle System 

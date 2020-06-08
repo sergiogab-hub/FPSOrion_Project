@@ -272,15 +272,19 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsPointedShootCalled;
 
-	/** CountAmmo*/
-	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
-	     int32 Ammo;
-
+	/** Is ultimate Active */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat") //Temporal Not Yet
 		bool bIsUltimate;
 
+	/** One Shoot or Multiple SHoot control variable */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Main|CharacterCombat") // Tarea Variable
 		bool bOneShoot;
+
+	/** CountAmmo*/
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
+	    int32 Ammo;
+
+	
 
 
 public:
@@ -395,7 +399,7 @@ public:
 
 	/** FTimerHablde Shoot Function*/
 	FTimerHandle ShootHandle;
-	FTimerHandle StillPressed;
+	FTimerHandle StillPressed; //Not yet
 	
 	/*** End Reload Function*/
 	UFUNCTION(BlueprintCallable , Category= "Main|CharacterCombat")
