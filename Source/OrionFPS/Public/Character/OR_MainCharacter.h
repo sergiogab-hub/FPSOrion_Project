@@ -10,6 +10,7 @@ class UCameraComponent;
 class USkeletalMeshComponent;
 class USpringArmComponent;
 class UAnimMontage;
+class UAnimInstance;
 class AProjectile;
 class UParticleSystem;
 
@@ -155,6 +156,10 @@ protected:
 	/** Reload Montage */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
 		UAnimMontage* ReloadMontage;
+
+	/** Anim Instance */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
+		UAnimInstance* MainAnimInstance;
 
 
 	/////ParticleSystem
@@ -405,6 +410,15 @@ public:
 	UFUNCTION(BlueprintCallable , Category= "Main|CharacterCombat")
 	void EndReload();
 
+	////////////////// Montage Functions ////////////////////
+
+		/*** Play Montage Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|Montage")
+		void PlayMyMontage(UAnimMontage* MontageToPlay, float Ratio, FName Section);
+
+	  /*** Stop Montage Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|Montage")
+		void StopMyMontage(float RatioStop);
 
 
 };

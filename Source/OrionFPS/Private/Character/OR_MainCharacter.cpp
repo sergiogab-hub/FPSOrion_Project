@@ -88,6 +88,9 @@ AMainCharacter::AMainCharacter()
 void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Set AnimInstance
+	MainAnimInstance = Arms->GetAnimInstance();
 	
 }
 
@@ -156,14 +159,12 @@ void AMainCharacter::StarSprint()
 	if (GetCombatStatus() == ECombatStatus::EMS_Reload)
 	{
 		bIsReload = false;
-		UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-		AnimInstance->StopAllMontages(0.5);
+		StopMyMontage(0.5);
 	}
 
 	/** Set Variable */
 	bIsRuning = true;
 	UpdatePlayerProperties();
-	
 }
 
 void AMainCharacter::StopSprint()
@@ -183,11 +184,10 @@ void AMainCharacter::StarGunPoint()
 	if (GetCombatStatus() == ECombatStatus::EMS_Reload)
 	{
 		bIsReload = false;
-		UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-		AnimInstance->StopAllMontages(0.2);
+		StopMyMontage(0.2);
 	}
-	/*
-	* Set Variable */
+
+	/* Set Variable */
 	bIsPointed = true;
 	UpdatePlayerProperties();
 }
@@ -218,8 +218,7 @@ void AMainCharacter::StarShoot()
     if (GetCombatStatus() == ECombatStatus::EMS_Reload)	
 	{
 		bIsReload = false; 
-		UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-		AnimInstance->StopAllMontages(0.2); 
+		StopMyMontage(0.2);
 	}
 
 	/** Set Variables */
@@ -278,19 +277,12 @@ void AMainCharacter::StarReload()
 	/** Play Montage / Particles */
    if (GetCombatStatus() == ECombatStatus::EMS_Reload)
 	 {
-		if (IsValid(ReloadMontage))
+		PlayMyMontage(ReloadMontage, 1.2f, FName("Reload"));
+
+	    if (IsValid(SmokeReload))
 		{
-			UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-			if (IsValid(AnimInstance))
-			{
-				AnimInstance->Montage_Play(ReloadMontage, 1.2f);
-				AnimInstance->Montage_JumpToSection(FName("Reload"), ReloadMontage);
-			}
-			if (IsValid(SmokeReload))
-			{
-				UGameplayStatics::SpawnEmitterAttached(SmokeReload, Weapon, FName("RifleMag"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.13f, 0.01, 0.01f));
-			}
-      	}
+		 UGameplayStatics::SpawnEmitterAttached(SmokeReload, Weapon, FName("RifleMag"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.13f, 0.01, 0.01f));
+		}     	
 	}
 }
 
@@ -301,15 +293,13 @@ void AMainCharacter::EndReload()
 	bIsReload = false;
 
 	/** End Instance*/
-	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-	AnimInstance->StopAllMontages(0.5);
+	StopMyMontage(0.5f);
 	UpdatePlayerProperties();	
 
 	/** If Left Mouse Button Still Pressed Continue Shooting */
 	if (bIsKeyShootPressed) { StarShoot(); }
 	
 }
-
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -358,7 +348,7 @@ void AMainCharacter::Tick(float DeltaTime)
 
 ////////////////////////////////////////////////////////////////////
 //
-//   Chracter Movement / Combat Function
+//   Character Update Propertys and BP Functions
 //
 ////////////////////////////////////////////////////////////////////
 
@@ -368,7 +358,7 @@ void AMainCharacter::UpdatePlayerProperties()
 
 	/////////// Player Status////////////
 
-//Combat Status
+    //Combat Status
 	if (!bIsShooting && !bIsReload)
 	{
 		SetCombatStatus(ECombatStatus::EMS_NoCombat);
@@ -406,8 +396,6 @@ void AMainCharacter::UpdatePlayerProperties()
 	}
 
 	
-
-
 	              /////////////Camera Movement//////////////
 
 	//Activa/Deactive -> Camera Shoot Under
@@ -496,6 +484,30 @@ void AMainCharacter::UpdatePlayerProperties()
 }
 
 
+////////////////////////
+//Play - Stop Montage //
+////////////////////////
+
+void AMainCharacter::PlayMyMontage(UAnimMontage* MontageToPlay, float Ratio, FName Section)
+{
+	if (IsValid(MainAnimInstance))
+	{
+		if (IsValid(MontageToPlay))
+		{
+			MainAnimInstance->Montage_Play(MontageToPlay, Ratio);
+			MainAnimInstance->Montage_JumpToSection(Section, MontageToPlay);
+		}	
+	}	
+}
+
+void AMainCharacter::StopMyMontage(float RatioStop)
+{
+	if (IsValid(MainAnimInstance))
+	{
+		MainAnimInstance->StopAllMontages(RatioStop);
+	}
+}
+
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -511,10 +523,7 @@ void AMainCharacter::Shoot()
 		return;
 	}
 
-	//Set Montage Play Shoot Animation
-	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-
-	if (IsValid(AnimInstance) && IsValid(ShootMontage) && IsValid(PointedShoot_Montage) && IsValid(ProjectileClass))
+	if (IsValid(ProjectileClass))
 	{
 		if (IsValid(MuzzleShoot1) && IsValid(MuzzleShoot2) && IsValid(ShellEject) && IsValid(SmokeMuzzle) && IsValid(SmokeShell))
 		{
@@ -525,12 +534,10 @@ void AMainCharacter::Shoot()
 				switch (Section)
 				{
 				case 1:
-					AnimInstance->Montage_Play(PointedShoot_Montage, 2.0f);
-					AnimInstance->Montage_JumpToSection(FName("PShoot01"), PointedShoot_Montage);
+					PlayMyMontage(PointedShoot_Montage, 2.0F, FName("PShoot01"));
 					break;
 				case 2:
-					AnimInstance->Montage_Play(PointedShoot_Montage, 2.0f);
-					AnimInstance->Montage_JumpToSection(FName("PShoot02"), PointedShoot_Montage);
+					PlayMyMontage(PointedShoot_Montage, 2.0F, FName("PShoot02"));
 					break;
 				default:
 					break;
@@ -559,12 +566,10 @@ void AMainCharacter::Shoot()
 				switch (Section)
 				{
 				case 1:
-					AnimInstance->Montage_Play(ShootMontage, 2.0f);
-					AnimInstance->Montage_JumpToSection(FName("Shoot01"), ShootMontage);
+					PlayMyMontage(ShootMontage, 2.0f, FName("Shoot01"));
 					break;
 				case 2:
-					AnimInstance->Montage_Play(ShootMontage, 2.0f);
-					AnimInstance->Montage_JumpToSection(FName("Shoot02"), ShootMontage);
+					PlayMyMontage(ShootMontage, 2.0f, FName("Shoot02"));
 					break;
 				default:
 					break;
