@@ -52,7 +52,7 @@ AMainCharacter::AMainCharacter()
 	bIsPointed = false;
 	bIsJumping = false;
 	bIsReload = false;
-
+	
 
 	//Set Default Current Velocity
 	CurrentVelocity = 0.f;
@@ -66,12 +66,16 @@ AMainCharacter::AMainCharacter()
 
 
 	//Combat Varaibles
+	Ammo = 50;
+	bOneShoot=false;
+	bIsUltimate = false;
 	bIsShooting = false;
+	bIsKeyShootPressed = false;
 	bIsUnderShootCalled = false;
 	bIsPointedShootCalled = false;
-	bKeyShootPressed = false;
-	bIsUltimate = false;
-	Ammo = 50;
+	
+
+	
 	
 }
 
@@ -93,27 +97,32 @@ void AMainCharacter::BeginPlay()
 //   Character Player Input Movement
 //
 ////////////////////////////////////////////////////////////////////
-// Player Basic Movement Inputs Handles 
+
+
+/////////////////////////////////////////
+//Player Basic Movement Inputs Handles //
+/////////////////////////////////////////
 void AMainCharacter::MoveForward(float value)
 {
 	if (value == 0.0) { return;}
 	bIsMoving = true;
 	UpdatePlayerProperties();
-	AddMovementInput(GetActorForwardVector(), value);
-	
+	AddMovementInput(GetActorForwardVector(), value);	
 }
+
 void AMainCharacter::MoveRight(float value)
 {
 	if (value == 0.0) { return;}
 	bIsMoving = true;
 	UpdatePlayerProperties();
-	AddMovementInput(GetActorRightVector(), value);
-	
+	AddMovementInput(GetActorRightVector(), value);	
 }
+
 void AMainCharacter::RotatePitch(float value)
 {
 	AddControllerPitchInput(value * RotationSpeed * GetWorld()->GetDeltaSeconds());
 }
+
 void AMainCharacter::RotateYaw(float value)
 {
 	if (FMath::Abs(value) < 0.001) { return; }
@@ -121,59 +130,89 @@ void AMainCharacter::RotateYaw(float value)
 }
 
 
-// Star / End - Jump Space Bar Method
+
+///////////////////////////////////////
+//Star / End - Jump Space Bar Method //
+///////////////////////////////////////
 void AMainCharacter::StarJump()
 {
 	Jump();
 	UpdatePlayerProperties();
 }
+
 void AMainCharacter::EndJump()
 {
 	StopJumping();
 }
 
 
-// Star / End - Sprint Left Shift Method
+
+///////////////////////////////////////////
+// Star / End - Sprint Left Shift Method //
+///////////////////////////////////////////
 void AMainCharacter::StarSprint()
 {
+	/** Check Reload State */
+	if (GetCombatStatus() == ECombatStatus::EMS_Reload)
+	{
+		bIsReload = false;
+		UAnimInstance* AnimInstance = Arms->GetAnimInstance();
+		AnimInstance->StopAllMontages(0.5);
+	}
+
+	/** Set Variable */
 	bIsRuning = true;
 	UpdatePlayerProperties();
 	
 }
+
 void AMainCharacter::StopSprint()
 {
+	/** Set Variable */
 	bIsRuning = false;
 	UpdatePlayerProperties();
 }
 
 
-// Star / End - Gun Pointed Right Mouse Method
+/////////////////////////////////////////////////
+// Star / End - Gun Pointed Right Mouse Method //
+/////////////////////////////////////////////////
 void AMainCharacter::StarGunPoint()
 {
+	/** Check Reload State */
 	if (GetCombatStatus() == ECombatStatus::EMS_Reload)
 	{
 		bIsReload = false;
 		UAnimInstance* AnimInstance = Arms->GetAnimInstance();
 		AnimInstance->StopAllMontages(0.2);
 	}
+	/*
+	* Set Variable */
 	bIsPointed = true;
 	UpdatePlayerProperties();
 }
+
 void AMainCharacter::EndGunPoint()
 {
+	/** Set Variable */
 	bIsPointed = false;
 	UpdatePlayerProperties();
 }
 
 
-// Star/End Shoot
+////////////////////
+// Star/End Shoot //
+////////////////////
 void AMainCharacter::StarShoot()
 {
-    if (Ammo <= 0) 
-	{ 
-		StarReload(); 
-	    return; 
+	/** Check sufuciente Ammo */
+	if (Ammo <= 0)
+	{
+		StarReload();
+		return;
 	}
+
+	/** Check ReloadState */
     if (GetCombatStatus() == ECombatStatus::EMS_Reload)	
 	{
 		bIsReload = false; 
@@ -181,44 +220,61 @@ void AMainCharacter::StarShoot()
 		AnimInstance->StopAllMontages(0.2); 
 	}
 
+	/** Set Variables */
 	bIsShooting = true;
-	bKeyShootPressed = true;
+	bIsKeyShootPressed = true;
 	UpdatePlayerProperties();
-	GetWorld()->GetTimerManager().SetTimer(ShootHandle, this, &AMainCharacter::Shoot, 0.09, true, 0.0);
 
-	
+	/** Tarea Cambiar Modo Rifle*/
+	if (bOneShoot)
+	{
+		Shoot();
+		EndShootByReload();
+	}
+	else
+	{
+	  GetWorld()->GetTimerManager().SetTimer(ShootHandle, this, &AMainCharacter::Shoot, 0.09, true, 0.0);
+	}	
 }
 
 void AMainCharacter::EndShoot()
 {
+	/** Set Variables */
 	bIsShooting = false;
-	bKeyShootPressed = false;
+	bIsKeyShootPressed = false;
 	UpdatePlayerProperties();
 	GetWorldTimerManager().ClearTimer(ShootHandle);		
 }
 
-
-void AMainCharacter::EndReloadShoot()
+void AMainCharacter::EndShootByReload()
 {
+	/** Set Variables */
 	bIsShooting = false;
 	UpdatePlayerProperties();
 	GetWorldTimerManager().ClearTimer(ShootHandle);
 }
 
 
-
-//Star/ End Reload
+/////////////////////
+//Star/ End Reload //
+/////////////////////
 void AMainCharacter::StarReload()
 {
+
+	/** Check Ammo */
     if (Ammo >= 50) { return;}
 
+	/** If is Reload Return */
 	if (GetCombatStatus() == ECombatStatus::EMS_Reload) { return; }
 
-    if (GetCombatStatus()==ECombatStatus::EMS_FireUnder || GetCombatStatus() == ECombatStatus::EMS_PointedFire) { EndReloadShoot();}
+	/** If Is Firing End Shooting */
+	if (GetCombatStatus() == ECombatStatus::EMS_FireUnder || GetCombatStatus() == ECombatStatus::EMS_PointedFire) { EndShootByReload(); }
 
+	/** Set Variables */
 	bIsReload = true;
 	UpdatePlayerProperties();
 
+	/** Play Montage / Particles */
    if (GetCombatStatus() == ECombatStatus::EMS_Reload)
 	 {
 		if (IsValid(ReloadMontage))
@@ -239,14 +295,18 @@ void AMainCharacter::StarReload()
 
 void AMainCharacter::EndReload()
 {
+	/** Set Variables */
 	Ammo = 50;
 	bIsReload = false;
+
+	/** End Instance*/
 	UAnimInstance* AnimInstance = Arms->GetAnimInstance();
-	AnimInstance->StopAllMontages(0.4);
+	AnimInstance->StopAllMontages(0.8);
 	UpdatePlayerProperties();	
 
-	if (bKeyShootPressed) { StarShoot(); }
-
+	/** If Left Mouse Button Still Pressed Continue Shooting */
+	if (bIsKeyShootPressed) { StarShoot(); }
+	
 }
 
 
@@ -269,7 +329,8 @@ void AMainCharacter::Tick(float DeltaTime)
 		UpdatePlayerProperties();
 	}
 
-	///// Set Jumping Control ////
+
+	///// Set Jumping Control ////  /// No Optimizado
 	if (GetVelocity().Z != 0)
 	{
 		if (!bIsJumpCalled)
@@ -291,8 +352,6 @@ void AMainCharacter::Tick(float DeltaTime)
 			BP_EndCameraJump();
 		}
 	}
-
-	//MuzzleGunLocation = Weapon->GetSocketLocation("Muzzle");
 }
 
 
@@ -301,7 +360,6 @@ void AMainCharacter::Tick(float DeltaTime)
 //   Chracter Movement / Combat Function
 //
 ////////////////////////////////////////////////////////////////////
-
 
 // UpdatePlayerPropertys // Status-Camera
 void AMainCharacter::UpdatePlayerProperties()
@@ -329,13 +387,13 @@ void AMainCharacter::UpdatePlayerProperties()
 
 
 	//Movement Status
-	if ((bIsMoving && !bIsRuning && !bIsPointed ) || (bIsMoving && !bIsPointed && GetCombatStatus() == ECombatStatus::EMS_FireUnder) || (bIsMoving && GetCombatStatus() == ECombatStatus::EMS_Reload))
-	{
-		SetMovementStatus(EMovementStatus::EMS_Walking);
-	}
 	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay && GetCombatStatus() != ECombatStatus::EMS_FireUnder && !bIsReload)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Sprinting);
+	}
+	if ((bIsMoving && !bIsRuning && !bIsPointed ) || (bIsMoving && !bIsPointed && GetCombatStatus() == ECombatStatus::EMS_FireUnder) || (bIsMoving && GetCombatStatus() == ECombatStatus::EMS_Reload))
+	{
+		SetMovementStatus(EMovementStatus::EMS_Walking);
 	}
 	if (bIsPointed && GetCombatStatus() != ECombatStatus::EMS_Reload)
 	{
@@ -436,12 +494,17 @@ void AMainCharacter::UpdatePlayerProperties()
 
 }
 
+////////////////////////////////////////////////////////////////////
+//
+//  Combat Function
+//
+////////////////////////////////////////////////////////////////////
 
 void AMainCharacter::Shoot()
 {
 	if (Ammo <= 0) 
 	{
-		EndShoot();
+		EndShootByReload();
 		StarReload();
 		return;
 	}
@@ -507,7 +570,7 @@ void AMainCharacter::Shoot()
 				/*Get Socket Transforms*/
 				FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
 				FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
-				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 2.f;
+				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 2.5f;
 				MuzzleRotation.Yaw = MuzzleRotation.Yaw + 2;
 				
 			
@@ -524,6 +587,9 @@ void AMainCharacter::Shoot()
 			}
 		}
 		Ammo--;
+
+		// Tarea Check OneShoot
+		if (bOneShoot) { EndShootByReload(); }
 	}
 }
 

@@ -96,6 +96,9 @@ private:
 	void StarSprint();
 	void StopSprint();
 
+	
+	
+
 	/**  Pointed Weapon Right Mouse Input */
 	void StarGunPoint();
 	void EndGunPoint();
@@ -103,9 +106,12 @@ private:
 	/**  Shoot Left Mouse Input */
 	void StarShoot();
 	void EndShoot();
-	void EndReloadShoot();
+	void EndShootByReload();
 
+	/**  Star Reload Left Mouse */
 	void StarReload();
+
+	/** End Reload Binding by BP Function*/
 	
 
 protected:
@@ -136,6 +142,8 @@ protected:
 
 	                 /////////// Combat Character ///////////
 
+	/////Montages
+
 	/** Under Shoot Montage*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
 	    UAnimMontage* ShootMontage;
@@ -143,6 +151,13 @@ protected:
 	/** Pointed Shoot Montage */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
 		UAnimMontage* PointedShoot_Montage;
+
+	/** Reload Montage */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
+		UAnimMontage* ReloadMontage;
+
+
+	/////ParticleSystem
 
 	/** Muzzle Particle System */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
@@ -152,36 +167,25 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
 		UParticleSystem* MuzzleShoot2;
 
+	/** Muzzle Particle System */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
+		UParticleSystem* SmokeMuzzle;
+
 	/** Shell Eject Particle System */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
 		UParticleSystem* ShellEject;
 
 	/** Shell Eject Particle System */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
-		UParticleSystem* SmokeMuzzle;
-
-	/** Shell Eject Particle System */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
 		UParticleSystem* SmokeShell;
-
-
-	/** Reload Montage */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
-		UAnimMontage* ReloadMontage;
 
 	/** SmokeReload ParticleSystem */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
 		UParticleSystem* SmokeReload;
 
-
 	/** Ultimate Particle System */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem") //Temporal Not Yet
 		UParticleSystem* FinalGun;
-
-
-
-
-
 
 
 	                   ///////// Projectile Class /////////
@@ -252,13 +256,13 @@ public:
 
 	           ////////////////////Shoot Character/////////////////////
 
-	/** Shooting Control Variable  */
+	/** Shooting Control Variable*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsShooting;
 
-	/** Shooting Control Variable  */
+	/** Shooting Control Variable*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
-		bool bKeyShootPressed;
+		bool bIsKeyShootPressed;
 
 	/** Open/Close BP_UnderShoot Function*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
@@ -269,15 +273,14 @@ public:
 		bool bIsPointedShootCalled;
 
 	/** CountAmmo*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 	     int32 Ammo;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat") //Temporal Not Yet
 		bool bIsUltimate;
 
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
-	FVector MuzzleGunLocation;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Main|CharacterCombat") // Tarea Variable
+		bool bOneShoot;
 
 
 public:
@@ -305,9 +308,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|Enums")
 		ECombatStatus CombatStatus;
 
-	/** Set the New Movement Status*/
+	/** Set the New Combat Status*/
 	FORCEINLINE void SetCombatStatus(ECombatStatus Status) { CombatStatus = Status; } 
-	/** Get Current Movement Status*/
+	/** Get Current Combat Status*/
 	FORCEINLINE ECombatStatus GetCombatStatus() const { return CombatStatus; } 
 
 public:
@@ -387,14 +390,15 @@ public:
 		void Shoot();
 
 	/** Shoot Function*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat") //Temporal Not Yet
 		void UltimateShoot();
-
 
 	/** FTimerHablde Shoot Function*/
 	FTimerHandle ShootHandle;
+	FTimerHandle StillPressed;
 	
-	UFUNCTION(BlueprintCallable , Category= "Main|CharacterMovement")
+	/*** End Reload Function*/
+	UFUNCTION(BlueprintCallable , Category= "Main|CharacterCombat")
 	void EndReload();
 
 

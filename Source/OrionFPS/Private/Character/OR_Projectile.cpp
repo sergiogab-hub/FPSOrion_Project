@@ -53,28 +53,39 @@ AProjectile::AProjectile()
 ////////////////////////////////////////////////////////////////////
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	
 	if ((IsValid(OtherActor)) && (OtherActor != this) && (IsValid(OtherComp)))
 	{
-		if (ImpactParticles && ImpactParticlesSmoke)
+		if (ImpactParticlesStone && ImpactParticlesSmokeStone && ImpactParticlesEnemy && ImpactParticlesSmokeEnemy)
 		{
-
 			if (IsValid(MainCharacter))
-			{
-				FRotator RotationImpact = UKismetMathLibrary::FindLookAtRotation(Hit.Location, MainCharacter->GetActorLocation());
+			{			
+				if (IsValid(Hit.GetActor()))
+				{
+					FRotator RotationImpact = UKismetMathLibrary::FindLookAtRotation(Hit.Location, MainCharacter->GetActorLocation());
 
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, Hit.Location, RotationImpact, FVector(1.0f), true);//1.0
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmoke, Hit.Location, RotationImpact, FVector(0.5f), true);//0.5
-				/*UParticleSystemComponent* trace = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TraceImpact, MainCharacter->MuzzleGunLocation);
+					AActor* Actoristo = Hit.GetActor();
+					FString Name = Actoristo->GetName();
+
+					if (Name == FString("Enemy_5"))
+					{
+						UGameplayStatics::ApplyPointDamage(Hit.GetActor(), 10, MainCharacter->GetActorRotation().Vector(), Hit, MainCharacter->GetController(), this, DamageType);
+						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesEnemy, Hit.Location, RotationImpact, FVector(0.4f), true);//1.0
+						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmokeEnemy, Hit.Location, RotationImpact, FVector(0.2f), true);//0.5
+					}
+					else 
+					{
+						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesStone, Hit.Location, RotationImpact, FVector(1.0f), true);//1.0
+						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmokeStone, Hit.Location, RotationImpact, FVector(0.5f), true);//0.5
+					}	
+				}
+	
+			    /*UParticleSystemComponent* trace = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TraceImpact, MainCharacter->MuzzleGunLocation);
 				if (IsValid(TraceImpact))
 				{
-					
 					trace->SetVectorParameter(ParamName, Hit.Location);
 				}*/
-				Destroy();
-			}
-			
+          		Destroy();
+			}	
 		}
-	}
-	
+	}	
 }

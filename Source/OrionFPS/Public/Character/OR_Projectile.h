@@ -10,6 +10,8 @@ class UProjectileMovementComponent;
 class UStaticMeshComponent;
 class UParticleSystem;
 class USphereComponent;
+class UDamageType;
+
 class AMainCharacter;
 
 
@@ -48,13 +50,28 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
 		UProjectileMovementComponent* Projectile;
 
-	/** Impact Particle System */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
-	     UParticleSystem* ImpactParticles;
+
+	               //////////// Particle System //////////////
 
 	/** Impact Particle System */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
-		UParticleSystem* ImpactParticlesSmoke;
+	     UParticleSystem* ImpactParticlesStone;
+
+	/** Impact Particle System */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+		UParticleSystem* ImpactParticlesSmokeStone;
+
+	/** Impact Particle System */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+		UParticleSystem* ImpactParticlesEnemy;
+	/** Impact Particle System */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+		UParticleSystem* ImpactParticlesSmokeEnemy;
+
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+		TSubclassOf<UDamageType> DamageType;
+
 
 	/** Impact Particle System 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
