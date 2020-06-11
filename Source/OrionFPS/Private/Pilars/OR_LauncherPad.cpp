@@ -56,7 +56,7 @@ void ALauncherPad::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AAct
 		AMainCharacter* Main = Cast<AMainCharacter>(OtherActor);
 		if (IsValid(Main))
 		{
-			if (Main->Key)
+			if (Main->GetKeyBoolValue())
 			{
 				float ZVelocity = Main->GetCharacterMovement()->JumpZVelocity;
 				ZVelocity = ZVelocity * FMath::FRandRange(3, 5);

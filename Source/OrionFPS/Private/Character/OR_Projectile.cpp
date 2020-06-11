@@ -69,7 +69,7 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 
 					if (Name == FString("Enemy_5"))
 					{
-						UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, MainCharacter->GetActorRotation().Vector(), Hit, MainCharacter->GetController(), this, DamageType);
+						UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, MainCharacter->GetActorRotation().Vector(), Hit, MainCharacter->GetInstigatorController(), this, DamageType);
 
 						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesEnemy, Hit.Location, RotationImpact, FVector(0.4f), true);//0.4
 						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmokeEnemy, Hit.Location, RotationImpact, FVector(0.2f), true);//0.2

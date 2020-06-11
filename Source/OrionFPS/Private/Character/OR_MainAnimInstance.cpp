@@ -26,7 +26,7 @@ void UMainAnimInstance::NativeInitializeAnimation()
 	if (Pawn == nullptr)   //Check if Pawn exist
 	{
 		Pawn = TryGetPawnOwner();
-		if (Pawn)
+		if (IsValid(Pawn))
 		{
 			Main = Cast<AMainCharacter>(Pawn);
 		}
@@ -47,7 +47,7 @@ void UMainAnimInstance::UpdateAnimationPropertys()
 		Pawn = TryGetPawnOwner();
 	}
 	
-	if (Pawn)
+	if (IsValid(Pawn))
 	{
 		if (Main == nullptr)
 		{
@@ -67,7 +67,7 @@ void UMainAnimInstance::UpdateAnimationPropertys()
 		{
 
 			// When is Jumpin  and Left Shift Still -> Keep Sprinting
-			if (Main->bIsRuning)
+		/*	if (Main->bIsRuning)
 			{
 				Main->GetCharacterMovement()->MaxWalkSpeed = 500;
 			}
@@ -77,7 +77,7 @@ void UMainAnimInstance::UpdateAnimationPropertys()
 			{
 				MovementSpeed = 0;
 			}
-		    	
+		  */	
 		}
 
 	}

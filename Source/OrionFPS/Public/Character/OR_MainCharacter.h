@@ -23,7 +23,6 @@ enum class EMovementStatus :uint8
 	EMS_Walking UMETA(DisplayName = "Walking"),
 	EMS_Sprinting UMETA(DisplayName = "Sprinting"),
 	EMS_Pointing UMETA(DisplayName = "Pointing"),
-	//EMS_Reload UMETA(DisplayName = "Reload"),
 	
 
 	EMS_MAX UMETA(DisplayName = "DefaultMAX")
@@ -39,6 +38,8 @@ enum class ECombatStatus :uint8
 	EMS_FireUnder UMETA(DisplayName = "FireUnder"),
 	EMS_PointedFire UMETA(DisplayName = "PointedFire"),
 	EMS_Reload UMETA(DisplayName = "Reload"),
+	EMS_Melee UMETA(DisplayName = "Melee"),
+	EMS_Grenade UMETA (DisplayName="Grenade"),
 	
 	
 
@@ -97,8 +98,8 @@ private:
 	void StarSprint();
 	void StopSprint();
 
-	
-	
+
+
 
 	/**  Pointed Weapon Right Mouse Input */
 	void StarGunPoint();
@@ -107,12 +108,21 @@ private:
 	/**  Shoot Left Mouse Input */
 	void StarShoot();
 	void EndShoot();
-	void EndShootByReload();
+	void EndShootByOther();
 
 	/**  Star Reload Left Mouse */
 	void StarReload();
+	//EndReload() -> BP Function
 
-	/** End Reload Binding by BP Function*/
+	/**  Star Melee Attack */
+	void StarMeleeAtaack();
+	//EndMeleeAttack() -> BP Function
+
+	/**  Star Grenade Launcher */
+	void StarGrenadeLauncher();
+	//EndMeleeAttack() -> BP Function
+
+
 	
 
 protected:
@@ -140,6 +150,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		USpringArmComponent* SpringArm;
 
+	/** Spring Arm (Camera-Arms) for Player*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		UCapsuleComponent* MeleeDetector;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		FName WeaponSocketName;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		FName MeleeCapsuleSocketName;
+
+
 
 	                 /////////// Combat Character ///////////
 
@@ -157,8 +178,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
 		UAnimMontage* ReloadMontage;
 
-	/** Anim Instance */
+	/** Mele Montage */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
+		UAnimMontage* MeleMontage;
+
+	/** Mele Montage */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
+		UAnimMontage* GrenadeMontage;
+
+	/** Anim Instance */
+	UPROPERTY(BlueprintReadOnly, Category = "Main|Montage")
 		UAnimInstance* MainAnimInstance;
 
 
@@ -201,7 +230,7 @@ protected:
 
 
 
-public:
+protected:
 	////////////////////////////////////////////////////////////////////
 	//
 	//   Character Variables
@@ -230,10 +259,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		bool bIsPointed;
 
-	/** Control Variable Pointed Weapon State*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
-		bool bIsReload;
-
 	/** Open/Close BP_Pointed Function*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		bool bIsPointedCalled;
@@ -259,11 +284,23 @@ public:
 		bool Key = false;
 
 
-	           ////////////////////Shoot Character/////////////////////
+	           ////////////////////Combat Character/////////////////////
+
+	/** Control Variable Reload State*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		bool bIsReload;
+
+	/** Control Variable Reload State*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		bool bIsMeleeAttack;
 
 	/** Shooting Control Variable*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsShooting;
+
+	/** Shooting Control Variable*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bIsGrenadeLauncher;
 
 	/** Shooting Control Variable*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
@@ -287,7 +324,11 @@ public:
 
 	/** CountAmmo*/
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
-	    int32 Ammo;
+	    int32 WeaponAmmo;
+
+	/** CountAmmo*/
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		int32 GrenadeAmmo;
 
 	
 
@@ -321,6 +362,13 @@ public:
 	FORCEINLINE void SetCombatStatus(ECombatStatus Status) { CombatStatus = Status; } 
 	/** Get Current Combat Status*/
 	FORCEINLINE ECombatStatus GetCombatStatus() const { return CombatStatus; } 
+
+
+	                         /////// Character Variables //////
+
+	FORCEINLINE bool GetKeyBoolValue() const { return Key; }
+
+	void SetEnumMeleeCollision(ECollisionEnabled::Type CollisionState);
 
 public:
 	////////////////////////////////////////////////////////////////////
@@ -383,34 +431,47 @@ public:
 	//
 	////////////////////////////////////////////////////////////////////
 
-	////////////////////Movement Functions//////////////////////////
+     ///////////Movement Functions/////////////////////////////
 
-
-	/** Star Camera Pointed SHoot BP Camera Logic*/
+	    /** Update Player Properies()*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterMovement")
 		void UpdatePlayerProperties();
 
 
 
-	////////////////////Shoot Functions //////////////////////////
+    ////////////Combat Functions ////////////////////////////////
 
-	/** Shoot Function*/
+	     /** Shoot Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void Shoot();
 
-	/** Shoot Function*/
+	     /** Shoot Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat") //Temporal Not Yet
 		void UltimateShoot();
+   
+	     /*** End Reload Function*/
+	UFUNCTION(BlueprintCallable , Category= "Main|CharacterCombat")
+	void EndReload();
+
+		/*** End Reload Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+		void EndMeleeAttack();
+
+	    /*** Make Mele Damage*/
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+	void MakeMeleeDamage( UPrimitiveComponent* OverlappedComponent , AActor* OtherActor , UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+		/*** End Reload Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+		void EndGrenadeLauncher();
 
 	/** FTimerHablde Shoot Function*/
 	FTimerHandle ShootHandle;
 	FTimerHandle StillPressed; //Not yet
-	
-	/*** End Reload Function*/
-	UFUNCTION(BlueprintCallable , Category= "Main|CharacterCombat")
-	void EndReload();
 
-	////////////////// Montage Functions ////////////////////
+
+
+	////////////////// Montage Functions ///////////////////////
 
 		/*** Play Montage Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|Montage")
@@ -420,5 +481,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Main|Montage")
 		void StopMyMontage(float RatioStop);
 
+	  
 
 };
