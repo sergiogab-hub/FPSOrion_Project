@@ -12,6 +12,7 @@ class USpringArmComponent;
 class UAnimMontage;
 class UAnimInstance;
 class AProjectile;
+class AOR_LauncherProjectile;
 class UParticleSystem;
 
 
@@ -138,6 +139,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		UCameraComponent* Camera;
 
+	/** Main Camera RelativeRotationVariable*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		FRotator CameraRotationWithPawn;
+
 	/** Arms Skeletal Mesh for Player*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		USkeletalMeshComponent* Arms;
@@ -226,8 +231,11 @@ protected:
 
 	/** Projectile class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-		TSubclassOf<AProjectile> ProjectileClass;
+		TSubclassOf<AProjectile> BulletClass;
 
+	/** Projectile class to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+		TSubclassOf<AOR_LauncherProjectile> LauncherClass;
 
 
 protected:
@@ -283,6 +291,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|CharacterMovement") ////////Temporal
 		bool Key = false;
 
+	/**Tarea */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|CharacterMovement") ////////Temporal Tarea
+		int32 Count = 0;
+
 
 	           ////////////////////Combat Character/////////////////////
 
@@ -304,6 +316,10 @@ protected:
 
 	/** Shooting Control Variable*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bIsRuningControlDelay;
+
+	/** Shooting Control Variable*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsKeyShootPressed;
 
 	/** Open/Close BP_UnderShoot Function*/
@@ -314,13 +330,21 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsPointedShootCalled;
 
+	/** Open/Close BP_UnderShoot Function*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bIsReloadCalled;
+
+	/** Open/Close BP_PointedShoot Function*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bIsGrenadeLauncherCalled;
+
+	/** Open/Close BP_PointedShoot Function*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bIsMeleeAttackCalled;
+
 	/** Is ultimate Active */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat") //Temporal Not Yet
 		bool bIsUltimate;
-
-	/** One Shoot or Multiple SHoot control variable */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Main|CharacterCombat") // Tarea Variable
-		bool bOneShoot;
 
 	/** CountAmmo*/
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
@@ -367,6 +391,8 @@ public:
 	                         /////// Character Variables //////
 
 	FORCEINLINE bool GetKeyBoolValue() const { return Key; }
+	FORCEINLINE bool GetIsRuning() const { return bIsRuning; }
+	FORCEINLINE bool GetIsPointed() const { return bIsPointed; }
 
 	void SetEnumMeleeCollision(ECollisionEnabled::Type CollisionState);
 
@@ -422,6 +448,31 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
 		void BP_EndPointedShoot();
 
+	/** Star Grenade Launcher Camera Logic*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
+		void BP_StarGrenadeLauncher();
+
+	/** End Grenade Launcher Camera Logi*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
+		void BP_EndGrenadeLauncher();
+
+	/** Star Grenade Launcher Camera Logic*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
+		void BP_StarMeleeAttack();
+
+	/** End Grenade Launcher Camera Logi*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
+		void BP_EndMeleeAttack();
+
+	/** Star Reload BP Function*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
+		void BP_StarReload();
+
+	/** End Reload BP Function*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
+		void BP_EndReload();
+
+
 
 
 public:
@@ -451,9 +502,9 @@ public:
    
 	     /*** End Reload Function*/
 	UFUNCTION(BlueprintCallable , Category= "Main|CharacterCombat")
-	void EndReload();
+	    void EndReload();
 
-		/*** End Reload Function*/
+		/*** End MeleeAttack Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void EndMeleeAttack();
 
@@ -461,9 +512,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 	void MakeMeleeDamage( UPrimitiveComponent* OverlappedComponent , AActor* OtherActor , UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-		/*** End Reload Function*/
+		/*** End Grenade Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void EndGrenadeLauncher();
+
+	/*** End Reload Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+		void SpawnGrenadeLauncher();
 
 	/** FTimerHablde Shoot Function*/
 	FTimerHandle ShootHandle;

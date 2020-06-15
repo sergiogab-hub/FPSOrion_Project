@@ -63,22 +63,22 @@ void UMainAnimInstance::UpdateAnimationPropertys()
 		//// Jump Logics//////
 		VelocityZ = Speed.Z;
 
-		if (VelocityZ != 0.0)
+		/*if (VelocityZ != 0.0)
 		{
 
 			// When is Jumpin  and Left Shift Still -> Keep Sprinting
-		/*	if (Main->bIsRuning)
+			if (Main->GetIsRuning())
 			{
 				Main->GetCharacterMovement()->MaxWalkSpeed = 500;
 			}
 
 			// When is Jumpin  and Right Mouse Still Pressed Pointed Idle
-			if (Main->bIsPointed)
+			if (Main->GetIsPointed())
 			{
 				MovementSpeed = 0;
 			}
-		  */	
-		}
+		  	
+		}*/
 
 	}
 }

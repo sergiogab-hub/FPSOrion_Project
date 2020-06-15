@@ -2,7 +2,8 @@
 
 
 #include "Character/OR_MainCharacter.h"
-#include "Character/OR_Projectile.h"
+#include "Projectiles/OR_BulletProjectile.h"
+#include "Projectiles/OR_LauncherProjectile.h"
 
 #include "Engine/World.h"
 #include "TimerManager.h"
@@ -50,6 +51,7 @@ AMainCharacter::AMainCharacter()
 	MeleeDetector->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MeleeDetector->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	MeleeDetector->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	// Set Initial Default Movement Status
 	MovementStatus = EMovementStatus::EMS_Idle;
 
@@ -71,21 +73,27 @@ AMainCharacter::AMainCharacter()
 	bIsDelay = false;
 	bIsJumpCalled = false;
 	bIsSprintCalled = false;
+	bIsReloadCalled = false;
 	bIsPointedCalled = false;
 	bIsUnderShootCalled = false;
+	bIsMeleeAttackCalled = false;
 	bIsPointedShootCalled = false;
+	bIsGrenadeLauncherCalled = false;
 	
 
 
 	//Combat Varaibles
 	WeaponAmmo = 50;
 	GrenadeAmmo = 3;
-	bOneShoot=false;
 	bIsUltimate = false;
 	bIsShooting = false;
 	bIsKeyShootPressed = false;
 	bIsMeleeAttack = false;
 	bIsGrenadeLauncher = false;
+	bIsRuningControlDelay = false;
+
+
+	
 	
 	
 
@@ -119,7 +127,6 @@ void AMainCharacter::BeginPlay()
 ////////////////////////////////////////////////////////////////////
 
 
-
 //////////Player Basic Movement Inputs Handles///////
 void AMainCharacter::MoveForward(float value)
 {
@@ -139,7 +146,7 @@ void AMainCharacter::MoveRight(float value)
 
 void AMainCharacter::RotatePitch(float value)
 {
-	AddControllerPitchInput(value * RotationSpeed * GetWorld()->GetDeltaSeconds());
+	AddControllerPitchInput(value * RotationSpeed * GetWorld()->GetDeltaSeconds());	
 }
 
 void AMainCharacter::RotateYaw(float value)
@@ -150,7 +157,11 @@ void AMainCharacter::RotateYaw(float value)
 
 
 
-
+////////////////////////////////////////////////////////////////////
+//
+//   Character Player Movement Functions
+//
+////////////////////////////////////////////////////////////////////
 
 ////////Star / End - Jump Space Bar Method /////////
 void AMainCharacter::StarJump()
@@ -163,8 +174,6 @@ void AMainCharacter::EndJump()
 {
 	StopJumping();
 }
-
-
 
 
 
@@ -191,8 +200,6 @@ void AMainCharacter::StopSprint()
 }
 
 
-
-
 ///////// Star / End - Gun Pointed Right Mouse Method /////////
 void AMainCharacter::StarGunPoint()
 {
@@ -215,9 +222,14 @@ void AMainCharacter::EndGunPoint()
 	UpdatePlayerProperties();
 }
 
+////////////////////////////////////////////////////////////////////
+//
+//   Character Player Combat Functions
+//
+////////////////////////////////////////////////////////////////////
 
 
-//////////// Star/End Shoot ////////////
+///////////////////// Star/End Shoot ///////////////////
 void AMainCharacter::StarShoot()
 {
 	
@@ -230,7 +242,7 @@ void AMainCharacter::StarShoot()
 		return;
 	}
 
-	if (GetCombatStatus() == ECombatStatus::EMS_Grenade)
+	if (GetCombatStatus() == ECombatStatus::EMS_Grenade || GetCombatStatus() == ECombatStatus::EMS_Melee)
 	{
 		return;
 	}
@@ -241,29 +253,12 @@ void AMainCharacter::StarShoot()
 		StopMyMontage(0.2);
 	}
 
-	if (GetCombatStatus() == ECombatStatus::EMS_Melee)
-	{
-		/*bIsMeleeAttack = false;
-		StopMyMontage(0.8);*/
-		return;
-	}
-
 
 	/** Set Variables */
 	bIsShooting = true;
 	UpdatePlayerProperties();
 	GetWorld()->GetTimerManager().SetTimer(ShootHandle, this, &AMainCharacter::Shoot, 0.09, true, 0.0);
-	
-	/** Tarea Cambiar Modo Rifle
-	if (bOneShoot)
-	{
-		Shoot();
-		EndShootByReload();
-	}
-	else
-	{
-	 
-	}	*/
+
 }
 
 void AMainCharacter::EndShoot()
@@ -285,7 +280,7 @@ void AMainCharacter::EndShootByOther()
 
 
 
-////////////Star/ End Reload //////////
+/////////////////////////Star/ End Reload //////////////////
 void AMainCharacter::StarReload()
 {
 	/** Check Movement Conditions */
@@ -332,7 +327,7 @@ void AMainCharacter::EndReload()
 
 
 
-////////////Star/ End MeleeAttack //////////
+//////////////////////////////Star/ End MeleeAttack ///////////////////
 void AMainCharacter::StarMeleeAtaack()
 {
 	/** Check Movement Conditions*/
@@ -355,11 +350,12 @@ void AMainCharacter::StarMeleeAtaack()
 	/** Set Variables / Play Montage*/
 	bIsMeleeAttack = true;
 	UpdatePlayerProperties();
-	PlayMyMontage(MeleMontage, 0.8f, "Melee");
+	PlayMyMontage(MeleMontage, 1.0f, "Melee");
 
 }
 void AMainCharacter::EndMeleeAttack()
 {
+
 	/** Set Variables / End Montage*/
 	bIsMeleeAttack = false;
 	UpdatePlayerProperties();
@@ -368,7 +364,7 @@ void AMainCharacter::EndMeleeAttack()
 	/** If Left Mouse Button Still Pressed Continue Shooting */
 	if (bIsKeyShootPressed) { StarShoot(); }
 }
-void AMainCharacter::SetEnumMeleeCollision(ECollisionEnabled::Type CollisionState)
+void AMainCharacter::SetEnumMeleeCollision(ECollisionEnabled::Type CollisionState) //Call By Anim Notify
 {
 	MeleeDetector->SetCollisionEnabled(CollisionState);
 }
@@ -376,13 +372,13 @@ void AMainCharacter::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, A
 {
 	if (IsValid(OtherActor))
 	{
-		UGameplayStatics::ApplyPointDamage(OtherActor, 10.f, SweepResult.Location, SweepResult, GetInstigatorController(), this, nullptr);
+		UGameplayStatics::ApplyPointDamage(OtherActor, 20.f, SweepResult.Location, SweepResult, GetInstigatorController(), this, nullptr);
 	}
 }
 
 
 
-////////////Star/ End GrenadeLauncher //////////
+/////////////////////////Star/ End GrenadeLauncher ///////////////////
 void AMainCharacter::StarGrenadeLauncher()
 {
 	/** Check Movement Conditions*/
@@ -409,14 +405,41 @@ void AMainCharacter::StarGrenadeLauncher()
 		StopMyMontage(0.2);
 	}
 
+	if (GetMovementStatus() == EMovementStatus::EMS_Sprinting)
+	{
+		bIsRuningControlDelay = true;
+	}
+
 	/** Set Variables / Play Montage*/
 	bIsGrenadeLauncher = true;
-	PlayMyMontage(GrenadeMontage, 1.0f, "Grenade");
+	PlayMyMontage(GrenadeMontage, 0.8f, "Grenade");
 	UpdatePlayerProperties();	
+
+
+
 }
 
-void AMainCharacter::EndGrenadeLauncher()
+void AMainCharacter::SpawnGrenadeLauncher() //Call By Anim Notify
 {
+	if (IsValid(LauncherClass))
+	{
+		FVector GrenadeLocation = Arms->GetSocketLocation("GrenadeSocket");
+		FRotator GrenadeRotation = Camera->GetComponentRotation();
+		GrenadeRotation.Pitch = GrenadeRotation.Pitch + 10;
+
+		/*Spawn Projectile*/
+		AOR_LauncherProjectile* Launcher = GetWorld()->SpawnActor<AOR_LauncherProjectile>(LauncherClass, GrenadeLocation, GrenadeRotation);
+		Launcher->SetMain(this);
+	}
+}
+
+void AMainCharacter::EndGrenadeLauncher() //Call By Anim Notify
+{
+	if (bIsRuningControlDelay)
+	{
+		bIsRuningControlDelay = false;
+	}
+
 	/** Set Variables / End Montage*/
 	bIsGrenadeLauncher = false;
 	UpdatePlayerProperties();
@@ -429,11 +452,14 @@ void AMainCharacter::EndGrenadeLauncher()
 
 
 
+
+
 ////////////////////////////////////////////////////////////////////
 //
 //   Basic Event Tick
 //
 ////////////////////////////////////////////////////////////////////
+
 void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -471,6 +497,13 @@ void AMainCharacter::Tick(float DeltaTime)
 			BP_EndCameraJump();
 		}
 	}
+
+	///// Set Camera Rotation Movement with Pawn //// 
+	if(bIsGrenadeLauncherCalled || bIsMeleeAttackCalled)
+	{
+		CameraRotationWithPawn.Pitch = GetControlRotation().Pitch;
+	}
+
 }
 
 
@@ -485,6 +518,7 @@ void AMainCharacter::UpdatePlayerProperties()
 {
 
 	/////////// Player Status////////////
+
 
 	//Combat Status
 
@@ -515,13 +549,14 @@ void AMainCharacter::UpdatePlayerProperties()
 	
 	
 
+
 	//Movement Status
 
 	if ((bIsMoving && !bIsRuning && !bIsPointed ) || (bIsMoving && !bIsPointed && GetCombatStatus() == ECombatStatus::EMS_FireUnder) || (bIsMoving && (GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade)))
 	{
 		SetMovementStatus(EMovementStatus::EMS_Walking);
 	}
-	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay && GetCombatStatus() != ECombatStatus::EMS_FireUnder && !bIsReload)
+	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay && GetCombatStatus() != ECombatStatus::EMS_FireUnder && !bIsReload && !bIsGrenadeLauncher)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Sprinting);
 	}
@@ -577,7 +612,7 @@ void AMainCharacter::UpdatePlayerProperties()
 
 
 	//Activa/Deactive -> Camera Sprinting Movements
-	if (GetMovementStatus() == EMovementStatus::EMS_Sprinting)
+	if (GetMovementStatus() == EMovementStatus::EMS_Sprinting )
 	{
 		if (!bIsSprintCalled)
 		{
@@ -620,8 +655,57 @@ void AMainCharacter::UpdatePlayerProperties()
 		}
 	}
 
-}
+	//Activa/Deactive -> Camera Grenade
+	if (GetCombatStatus() == ECombatStatus::EMS_Grenade)
+	{
+		if (!bIsGrenadeLauncherCalled)
+		{
+			
+			bIsGrenadeLauncherCalled = true;
+			CameraRotationWithPawn = Camera->GetRelativeRotation();
+			Camera->bUsePawnControlRotation = false;
+			BP_StarGrenadeLauncher();
+		}
+	}
+	else
+	{
+		if (bIsGrenadeLauncherCalled)
+		{
+			bIsGrenadeLauncherCalled = false;
+			BP_EndGrenadeLauncher();
+		}
+	}
 
+	//Activa/Deactive -> Camera Melee Attack
+	if (GetCombatStatus() == ECombatStatus::EMS_Melee)
+	{
+		if (!bIsMeleeAttackCalled)
+		{
+
+			bIsMeleeAttackCalled = true;
+			CameraRotationWithPawn = Camera->GetRelativeRotation();
+			Camera->bUsePawnControlRotation = false;
+			BP_StarMeleeAttack();
+		}
+	}
+	else
+	{
+		if (bIsMeleeAttackCalled)
+		{
+			bIsMeleeAttackCalled = false;
+			BP_EndMeleeAttack();
+		}
+	}
+
+
+
+
+
+
+
+
+
+}
 
 
 ////////////////////////
@@ -650,7 +734,7 @@ void AMainCharacter::StopMyMontage(float RatioStop)
 
 ////////////////////////////////////////////////////////////////////
 //
-//  Combat Function
+//  Shot Function
 //
 ////////////////////////////////////////////////////////////////////
 void AMainCharacter::Shoot()
@@ -662,7 +746,7 @@ void AMainCharacter::Shoot()
 		return;
 	}
 
-	if (IsValid(ProjectileClass))
+	if (IsValid(BulletClass))
 	{
 		if (IsValid(MuzzleShoot1) && IsValid(MuzzleShoot2) && IsValid(ShellEject) && IsValid(SmokeMuzzle) && IsValid(SmokeShell))
 		{
@@ -688,7 +772,7 @@ void AMainCharacter::Shoot()
 				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 4.f; //Adjust Socket Rotation for pointed
 
 				/*Spawn Projectile*/
-				AProjectile* Projectile= GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
+				AProjectile* Projectile= GetWorld()->SpawnActor<AProjectile>(BulletClass, MuzzleLocation, MuzzleRotation);
 				Projectile->SetMain(this); // Set This to Projectile
 		
 				/** Spawn Emitters */
@@ -722,8 +806,11 @@ void AMainCharacter::Shoot()
 				
 			
 				/*Spawn Projectile*/
-				AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation);
+				AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(BulletClass, MuzzleLocation, MuzzleRotation);
 				Projectile->SetMain(this); // Set This to Projectile
+
+
+	
 
 				/** Spawn Emitters */
 				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot1, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
@@ -734,9 +821,6 @@ void AMainCharacter::Shoot()
 			}
 		}
 		WeaponAmmo--;
-
-		// Tarea Check OneShoot
-		//if (bOneShoot) { EndShootByReload(); }
 	}
 }
 
