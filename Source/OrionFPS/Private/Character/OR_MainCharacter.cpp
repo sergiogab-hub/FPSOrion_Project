@@ -698,6 +698,30 @@ void AMainCharacter::UpdatePlayerProperties()
 	}
 
 
+	//Activa/Deactive -> Camera Melee Attack
+	if (GetCombatStatus() == ECombatStatus::EMS_Reload)
+	{
+		if (!bIsReloadCalled)
+		{
+
+			bIsReloadCalled = true;
+			CameraRotationWithPawn = Camera->GetRelativeRotation();
+			Camera->bUsePawnControlRotation = false;
+			BP_StarReload();
+		}
+	}
+	else
+	{
+		if (bIsReloadCalled)
+		{
+			if (!Camera->bUsePawnControlRotation)
+			{
+				Camera->bUsePawnControlRotation = true;
+				BP_EndReload();
+			}
+			bIsReloadCalled = false;
+		}
+	}
 
 
 
