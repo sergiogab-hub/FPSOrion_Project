@@ -655,7 +655,7 @@ void AMainCharacter::UpdatePlayerProperties()
 		}
 	}
 
-	//Activa/Deactive -> Camera Grenade
+	//Activa/Deactive -> Camera Grenade MOvement
 	if (GetCombatStatus() == ECombatStatus::EMS_Grenade)
 	{
 		if (!bIsGrenadeLauncherCalled)
@@ -675,6 +675,7 @@ void AMainCharacter::UpdatePlayerProperties()
 			BP_EndGrenadeLauncher();
 		}
 	}
+
 
 	//Activa/Deactive -> Camera Melee Attack
 	if (GetCombatStatus() == ECombatStatus::EMS_Melee)
@@ -698,7 +699,7 @@ void AMainCharacter::UpdatePlayerProperties()
 	}
 
 
-	//Activa/Deactive -> Camera Melee Attack
+	//Activa/Deactive -> Camera Reload Movement
 	if (GetCombatStatus() == ECombatStatus::EMS_Reload)
 	{
 		if (!bIsReloadCalled)
@@ -722,13 +723,6 @@ void AMainCharacter::UpdatePlayerProperties()
 			bIsReloadCalled = false;
 		}
 	}
-
-
-
-
-
-
-
 }
 
 
