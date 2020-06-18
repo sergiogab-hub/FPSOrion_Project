@@ -30,7 +30,6 @@ enum class EMovementStatus :uint8
 
 };
 
-
 /////// Combat Enum States /////////
 UENUM(BlueprintType)
 enum class ECombatStatus :uint8
@@ -42,10 +41,18 @@ enum class ECombatStatus :uint8
 	EMS_Melee UMETA(DisplayName = "Melee"),
 	EMS_Grenade UMETA (DisplayName="Grenade"),
 	
-	
+	EMS_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
+/////// Combat Enum States /////////
+UENUM(BlueprintType)
+enum class ECurrentWeapon :uint8
+{
+	EMS_Rifle UMETA(DisplayName = "Rifle"),
+	EMS_Rocket UMETA(DisplayName = "Rocket"),
+
 
 	EMS_MAX UMETA(DisplayName = "DefaultMAX")
-
 };
 
 
@@ -150,6 +157,10 @@ protected:
 	/** Weapon Skeletal Mesh for Player*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		USkeletalMeshComponent* Weapon;
+
+	/** Weapon Skeletal Mesh for Player*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		USkeletalMeshComponent* Rocket;
 
 	/** Spring Arm (Camera-Arms) for Player*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
@@ -386,6 +397,18 @@ public:
 	FORCEINLINE void SetCombatStatus(ECombatStatus Status) { CombatStatus = Status; } 
 	/** Get Current Combat Status*/
 	FORCEINLINE ECombatStatus GetCombatStatus() const { return CombatStatus; } 
+
+	                         /////// Weapon Status //////
+
+    /** Player Current Weapon Component*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|Enums")
+		ECurrentWeapon CurrentWeaponStatus;
+
+	/** Set the New Combat Status*/
+	FORCEINLINE void SetCurrentWeaponStatus (ECurrentWeapon Status) { CurrentWeaponStatus = Status; }
+	/** Get Current Combat Status*/
+	FORCEINLINE ECurrentWeapon  GetCurrentWeaponStatus() const { return CurrentWeaponStatus; }
+
 
 
 	                         /////// Character Variables //////

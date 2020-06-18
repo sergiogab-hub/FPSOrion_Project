@@ -45,6 +45,10 @@ AMainCharacter::AMainCharacter()
 	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
 	Weapon->SetupAttachment(Arms, WeaponSocketName);
 
+	Rocket = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Rocket"));
+	Rocket->SetupAttachment(Arms, WeaponSocketName);
+
+
 	// Player Weapon Mesh
 	MeleeDetector = CreateDefaultSubobject<UCapsuleComponent>(TEXT("MeleeDetector"));
 	MeleeDetector->SetupAttachment(Weapon, MeleeCapsuleSocketName);
@@ -54,6 +58,7 @@ AMainCharacter::AMainCharacter()
 
 	// Set Initial Default Movement Status
 	MovementStatus = EMovementStatus::EMS_Idle;
+	CurrentWeaponStatus = ECurrentWeapon::EMS_Rifle;
 
 
 	// State Movement Variables
@@ -116,6 +121,9 @@ void AMainCharacter::BeginPlay()
 
 	// Mele Combat
 	MeleeDetector->OnComponentBeginOverlap.AddDynamic(this, &AMainCharacter::MakeMeleeDamage);
+
+	//SetRocketWeaponInitialVisibility
+	Rocket->SetVisibility(false);
 	
 }
 
