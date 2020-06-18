@@ -4,6 +4,7 @@
 #include "Character/OR_MainCharacter.h"
 #include "Projectiles/OR_BulletProjectile.h"
 #include "Projectiles/OR_LauncherProjectile.h"
+#include "Projectiles/OR_RocketProjectile.H"
 
 #include "Engine/World.h"
 #include "TimerManager.h"
@@ -68,6 +69,7 @@ AMainCharacter::AMainCharacter()
 	bIsPointed = false;
 	bIsJumping = false;
 	bIsReload = false;
+	bIsSwitch = false;
 	
 
 	//Set Default Current Velocity
@@ -217,6 +219,11 @@ void AMainCharacter::StarGunPoint()
 		bIsReload = false;
 		StopMyMontage(0.2);
 	}
+	if (GetCurrentWeaponStatus() == ECurrentWeapon::EMS_Rocket)
+	{
+		SetScoopVisibility(true);
+		Rocket->SetVisibility(false);	
+	}
 
 	/* Set Variable */
 	bIsPointed = true;
@@ -225,6 +232,12 @@ void AMainCharacter::StarGunPoint()
 
 void AMainCharacter::EndGunPoint()
 {
+	if (GetCurrentWeaponStatus() == ECurrentWeapon::EMS_Rocket)
+	{
+		SetScoopVisibility(false);
+		Rocket->SetVisibility(true);
+	}
+
 	/** Set Variable */
 	bIsPointed = false;
 	UpdatePlayerProperties();
@@ -240,6 +253,11 @@ void AMainCharacter::EndGunPoint()
 ///////////////////// Star/End Shoot ///////////////////
 void AMainCharacter::StarShoot()
 {
+	if (GetCurrentWeaponStatus() == ECurrentWeapon::EMS_Rocket)
+	{
+		UltimateShoot();
+		return;
+	}
 	
 	bIsKeyShootPressed = true;
 
@@ -250,7 +268,7 @@ void AMainCharacter::StarShoot()
 		return;
 	}
 
-	if (GetCombatStatus() == ECombatStatus::EMS_Grenade || GetCombatStatus() == ECombatStatus::EMS_Melee)
+	if (GetCombatStatus() == ECombatStatus::EMS_Grenade || GetCombatStatus() == ECombatStatus::EMS_Melee || bIsSwitch)
 	{
 		return;
 	}
@@ -292,7 +310,7 @@ void AMainCharacter::EndShootByOther()
 void AMainCharacter::StarReload()
 {
 	/** Check Movement Conditions */
-    if (WeaponAmmo >= 50 || GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Grenade) 
+    if (WeaponAmmo >= 50 || GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Grenade || bIsSwitch)
 	{ 
 		return;
 	}
@@ -320,7 +338,6 @@ void AMainCharacter::StarReload()
 		UGameplayStatics::SpawnEmitterAttached(SmokeReload, Weapon, FName("RifleMag"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.13f, 0.01, 0.01f));
 	}
 }
-
 void AMainCharacter::EndReload()
 {
 	/** Set Variables / Stop Montage */
@@ -339,7 +356,7 @@ void AMainCharacter::EndReload()
 void AMainCharacter::StarMeleeAtaack()
 {
 	/** Check Movement Conditions*/
-	if (GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade)
+	if (GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade || bIsSwitch)
 	{ 
 		return; 
 	}
@@ -390,13 +407,12 @@ void AMainCharacter::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, A
 void AMainCharacter::StarGrenadeLauncher()
 {
 	/** Check Movement Conditions*/
-	if (GrenadeAmmo <= 0 || GetCombatStatus() == ECombatStatus::EMS_Grenade) 
+	if (GrenadeAmmo <= 0 || GetCombatStatus() == ECombatStatus::EMS_Grenade || bIsSwitch)
 	{ 
 	     return;
 	}
 
 	if (GetCombatStatus() == ECombatStatus::EMS_FireUnder || GetCombatStatus() == ECombatStatus::EMS_PointedFire) 
-	
 	{ 
 	    EndShootByOther(); 
 	}
@@ -426,7 +442,6 @@ void AMainCharacter::StarGrenadeLauncher()
 
 
 }
-
 void AMainCharacter::SpawnGrenadeLauncher() //Call By Anim Notify
 {
 	if (IsValid(LauncherClass))
@@ -440,7 +455,6 @@ void AMainCharacter::SpawnGrenadeLauncher() //Call By Anim Notify
 		Launcher->SetMain(this);
 	}
 }
-
 void AMainCharacter::EndGrenadeLauncher() //Call By Anim Notify
 {
 	if (bIsRuningControlDelay)
@@ -460,6 +474,28 @@ void AMainCharacter::EndGrenadeLauncher() //Call By Anim Notify
 
 
 
+void AMainCharacter::StarSwtichWeapon()
+{
+	if (GetCombatStatus() == ECombatStatus::EMS_Grenade || GetMovementStatus()==EMovementStatus::EMS_Switch || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Reload)
+	{
+		return;
+	}
+	if (GetCombatStatus() == ECombatStatus::EMS_FireUnder || GetCombatStatus() == ECombatStatus::EMS_PointedFire)
+	{
+		EndShootByOther();
+	}
+	bIsSwitch = true;
+	UpdatePlayerProperties();
+}
+
+void AMainCharacter::EndSwitchWeapom()
+{
+	bIsSwitch = false;
+	Rocket->SetVisibility(true);
+	Weapon->SetVisibility(false);
+	SetCurrentWeaponStatus(ECurrentWeapon::EMS_Rocket);
+	UpdatePlayerProperties();
+}
 
 
 ////////////////////////////////////////////////////////////////////
@@ -560,21 +596,25 @@ void AMainCharacter::UpdatePlayerProperties()
 
 	//Movement Status
 
-	if ((bIsMoving && !bIsRuning && !bIsPointed ) || (bIsMoving && !bIsPointed && GetCombatStatus() == ECombatStatus::EMS_FireUnder) || (bIsMoving && (GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade)))
+	if ((bIsMoving && !bIsRuning && !bIsPointed && !bIsSwitch) || (bIsMoving && !bIsPointed && GetCombatStatus() == ECombatStatus::EMS_FireUnder && !bIsSwitch) || (bIsMoving && (GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade) && !bIsSwitch))
 	{
 		SetMovementStatus(EMovementStatus::EMS_Walking);
 	}
-	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay && GetCombatStatus() != ECombatStatus::EMS_FireUnder && !bIsReload && !bIsGrenadeLauncher)
+	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay && GetCombatStatus() != ECombatStatus::EMS_FireUnder && !bIsReload && !bIsGrenadeLauncher && !bIsSwitch)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Sprinting);
 	}
-	if (bIsPointed && GetCombatStatus() != ECombatStatus::EMS_Reload && GetCombatStatus() != ECombatStatus::EMS_Melee && GetCombatStatus() != ECombatStatus::EMS_Grenade)
+	if (bIsPointed && GetCombatStatus() != ECombatStatus::EMS_Reload && GetCombatStatus() != ECombatStatus::EMS_Melee && GetCombatStatus() != ECombatStatus::EMS_Grenade && !bIsSwitch)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Pointing);
 	}
-	if (!bIsMoving && !bIsPointed || bIsDelay && !bIsPointed || !bIsMoving && ( GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade))
+	if (!bIsMoving && !bIsPointed || bIsDelay && !bIsPointed || !bIsMoving && ( GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade) && !bIsSwitch)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Idle);
+	}
+	if (bIsSwitch)
+	{
+		SetMovementStatus(EMovementStatus::EMS_Switch);
 	}
 
 	
@@ -758,6 +798,7 @@ void AMainCharacter::StopMyMontage(float RatioStop)
 }
 
 
+
 ////////////////////////////////////////////////////////////////////
 //
 //  Shot Function
@@ -852,9 +893,14 @@ void AMainCharacter::Shoot()
 
 void AMainCharacter::UltimateShoot()
 {
-	FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
-	FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
-	UGameplayStatics::SpawnEmitterAttached(FinalGun, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.1f));
+	if (IsValid(RocketClass))
+	{
+		FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
+		FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
+		MuzzleRotation.Pitch = MuzzleRotation.Pitch - 4.f;
+		AOR_RocketProjectile* MyRocket=GetWorld()->SpawnActor<AOR_RocketProjectile>(RocketClass, MuzzleLocation, MuzzleRotation);
+		MyRocket->SetMain(this);
+	}
 }
 
 

@@ -13,6 +13,7 @@ class UAnimMontage;
 class UAnimInstance;
 class AProjectile;
 class AOR_LauncherProjectile;
+class AOR_RocketProjectile;
 class UParticleSystem;
 
 
@@ -24,6 +25,7 @@ enum class EMovementStatus :uint8
 	EMS_Walking UMETA(DisplayName = "Walking"),
 	EMS_Sprinting UMETA(DisplayName = "Sprinting"),
 	EMS_Pointing UMETA(DisplayName = "Pointing"),
+	EMS_Switch UMETA(DisplayName = "Switch"),
 	
 
 	EMS_MAX UMETA(DisplayName = "DefaultMAX")
@@ -44,7 +46,8 @@ enum class ECombatStatus :uint8
 	EMS_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
-/////// Combat Enum States /////////
+
+/////// Weapon Enum States /////////
 UENUM(BlueprintType)
 enum class ECurrentWeapon :uint8
 {
@@ -130,6 +133,10 @@ private:
 	void StarGrenadeLauncher();
 	//EndMeleeAttack() -> BP Function
 
+	UFUNCTION(BlueprintCallable)
+	void StarSwtichWeapon();
+
+	
 
 	
 
@@ -244,9 +251,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 		TSubclassOf<AProjectile> BulletClass;
 
-	/** Projectile class to spawn */
+	/** Projectile Grenade to spawn */
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 		TSubclassOf<AOR_LauncherProjectile> LauncherClass;
+
+	/** Projectile Rocket to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+		TSubclassOf<AOR_RocketProjectile> RocketClass;
+
 
 
 protected:
@@ -297,6 +309,9 @@ protected:
 	/** Pawn Current Velocity  */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		float CurrentVelocity;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		float bIsSwitch;
 
 	/** Launcher Pad Variable Key*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|CharacterMovement") ////////Temporal
@@ -495,6 +510,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
 		void BP_EndReload();
 
+	/**Scoop Function*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | Movement")
+		void SetScoopVisibility(bool Visibilty);
+
 
 
 
@@ -560,5 +579,8 @@ public:
 		void StopMyMontage(float RatioStop);
 
 	  
+	/*** End Switch Weapon*/
+	UFUNCTION(BlueprintCallable, Category = "Main|Movement")
+		void EndSwitchWeapom();
 
 };
