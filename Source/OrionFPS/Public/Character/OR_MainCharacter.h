@@ -131,10 +131,15 @@ private:
 
 	/**  Star Grenade Launcher */
 	void StarGrenadeLauncher();
-	//EndMeleeAttack() -> BP Function
+	//EndGrenadeLauncher() -> BP Function
 
-	UFUNCTION(BlueprintCallable)
 	void StarSwtichWeapon();
+	//EndSwitch() -> BP Function
+
+	void ActivateCurrentUltimate();
+
+
+
 
 	
 
@@ -311,7 +316,7 @@ protected:
 		float CurrentVelocity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
-		float bIsSwitch;
+		float bIsSwitching;
 
 	/** Launcher Pad Variable Key*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|CharacterMovement") ////////Temporal
@@ -368,10 +373,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsMeleeAttackCalled;
 
-	/** Is ultimate Active */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat") //Temporal Not Yet
-		bool bIsUltimate;
-
 	/** CountAmmo*/
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 	    int32 WeaponAmmo;
@@ -379,6 +380,29 @@ protected:
 	/** CountAmmo*/
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		int32 GrenadeAmmo;
+
+
+	       ////////////////////Combat Character/////////////////////
+
+	/** Is ultimate Active */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bIsUltimate;
+
+	/** Rockry AmmoCount */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+	   int32 RocketAmmo;
+
+	/** Is ultimate Active */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bIsAttackUltimate;
+
+	/** Is ultimate Active */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bIsDefenseUltimate;
+
+	/** Is ultimate Active */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+		bool bIsMovilityUltimate;
 
 	
 
@@ -426,7 +450,7 @@ public:
 
 
 
-	                         /////// Character Variables //////
+	                        /////// Character Variables //////
 
 	FORCEINLINE bool GetKeyBoolValue() const { return Key; }
 	FORCEINLINE bool GetIsRuning() const { return bIsRuning; }
@@ -510,9 +534,25 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_CombatEvents")
 		void BP_EndReload();
 
+
+	              /////////////Ultimate BP Functions /////////////////
+
 	/**Scoop Function*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | Movement")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_Ultimates")
 		void SetScoopVisibility(bool Visibilty);
+
+	/**Star Attack Camera Logic*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_Ultimates")
+		void BP_StarAttackUltimate();
+
+	/**Star Attack Camera Logic*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_Ultimates")
+		void BP_EndAttackUltimate();
+
+	/**ShootRocketCameraLogic*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_Ultimates")
+		void BP_ShootRocket();
+
 
 
 
@@ -530,6 +570,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterMovement")
 		void UpdatePlayerProperties();
 
+	/*** End Switch Weapon*/
+	UFUNCTION(BlueprintCallable, Category = "Main|Movement")
+		void EndSwitchWeapom();
+
 
 
     ////////////Combat Functions ////////////////////////////////
@@ -537,35 +581,42 @@ public:
 	     /** Shoot Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void Shoot();
-
 	     /** Shoot Function*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat") //Temporal Not Yet
-		void UltimateShoot();
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat") 
+		void RocketShoot();
+	    /** Shoot FTimerHablde */
+	   FTimerHandle ShootHandle;
    
+
 	     /*** End Reload Function*/
 	UFUNCTION(BlueprintCallable , Category= "Main|CharacterCombat")
 	    void EndReload();
 
+
 		/*** End MeleeAttack Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void EndMeleeAttack();
-
 	    /*** Make Mele Damage*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
-	void MakeMeleeDamage( UPrimitiveComponent* OverlappedComponent , AActor* OtherActor , UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	    void MakeMeleeDamage( UPrimitiveComponent* OverlappedComponent , AActor* OtherActor , UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 
 		/*** End Grenade Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void EndGrenadeLauncher();
-
 	/*** End Reload Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void SpawnGrenadeLauncher();
 
-	/** FTimerHablde Shoot Function*/
-	FTimerHandle ShootHandle;
-	FTimerHandle StillPressed; //Not yet
 
+	/***Star Attack Ultimate Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+		void  StarAttackUltimate();
+	/***End Attack Ultimate Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+		void  EndAttackUltimate();
+	    /** Shoot FTimerHablde */
+	     FTimerHandle AttackUltimateHandle;
 
 
 	////////////////// Montage Functions ///////////////////////
@@ -579,8 +630,5 @@ public:
 		void StopMyMontage(float RatioStop);
 
 	  
-	/*** End Switch Weapon*/
-	UFUNCTION(BlueprintCallable, Category = "Main|Movement")
-		void EndSwitchWeapom();
 
 };

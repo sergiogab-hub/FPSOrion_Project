@@ -69,7 +69,7 @@ AMainCharacter::AMainCharacter()
 	bIsPointed = false;
 	bIsJumping = false;
 	bIsReload = false;
-	bIsSwitch = false;
+	bIsSwitching = false;
 	
 
 	//Set Default Current Velocity
@@ -92,7 +92,6 @@ AMainCharacter::AMainCharacter()
 	//Combat Varaibles
 	WeaponAmmo = 50;
 	GrenadeAmmo = 3;
-	bIsUltimate = false;
 	bIsShooting = false;
 	bIsKeyShootPressed = false;
 	bIsMeleeAttack = false;
@@ -100,6 +99,12 @@ AMainCharacter::AMainCharacter()
 	bIsRuningControlDelay = false;
 
 
+	//Ultimate Varaibles
+	bIsUltimate = false;
+	RocketAmmo = 5;
+	bIsAttackUltimate = false;
+	bIsDefenseUltimate = false;
+	bIsMovilityUltimate = false;
 	
 	
 	
@@ -176,10 +181,12 @@ void AMainCharacter::RotateYaw(float value)
 ////////Star / End - Jump Space Bar Method /////////
 void AMainCharacter::StarJump()
 {
-	Jump();
-	UpdatePlayerProperties();
+	if (!bIsUltimate)
+	{
+		Jump();
+		UpdatePlayerProperties();
+	}
 }
-
 void AMainCharacter::EndJump()
 {
 	StopJumping();
@@ -219,11 +226,6 @@ void AMainCharacter::StarGunPoint()
 		bIsReload = false;
 		StopMyMontage(0.2);
 	}
-	if (GetCurrentWeaponStatus() == ECurrentWeapon::EMS_Rocket)
-	{
-		SetScoopVisibility(true);
-		Rocket->SetVisibility(false);	
-	}
 
 	/* Set Variable */
 	bIsPointed = true;
@@ -232,12 +234,6 @@ void AMainCharacter::StarGunPoint()
 
 void AMainCharacter::EndGunPoint()
 {
-	if (GetCurrentWeaponStatus() == ECurrentWeapon::EMS_Rocket)
-	{
-		SetScoopVisibility(false);
-		Rocket->SetVisibility(true);
-	}
-
 	/** Set Variable */
 	bIsPointed = false;
 	UpdatePlayerProperties();
@@ -253,13 +249,20 @@ void AMainCharacter::EndGunPoint()
 ///////////////////// Star/End Shoot ///////////////////
 void AMainCharacter::StarShoot()
 {
+	bIsKeyShootPressed = true;
+
+	/** Rocket Shoot */
 	if (GetCurrentWeaponStatus() == ECurrentWeapon::EMS_Rocket)
 	{
-		UltimateShoot();
+		if (RocketAmmo > 0 && bIsAttackUltimate)
+		{
+			RocketShoot();
+			
+		}
+		
 		return;
 	}
-	
-	bIsKeyShootPressed = true;
+
 
 	/** Check Movement Conditions */
 	if (WeaponAmmo <= 0)
@@ -268,7 +271,7 @@ void AMainCharacter::StarShoot()
 		return;
 	}
 
-	if (GetCombatStatus() == ECombatStatus::EMS_Grenade || GetCombatStatus() == ECombatStatus::EMS_Melee || bIsSwitch)
+	if (GetCombatStatus() == ECombatStatus::EMS_Grenade || GetCombatStatus() == ECombatStatus::EMS_Melee || bIsSwitching)
 	{
 		return;
 	}
@@ -310,7 +313,7 @@ void AMainCharacter::EndShootByOther()
 void AMainCharacter::StarReload()
 {
 	/** Check Movement Conditions */
-    if (WeaponAmmo >= 50 || GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Grenade || bIsSwitch)
+    if (WeaponAmmo >= 50 || GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Grenade || bIsSwitching)
 	{ 
 		return;
 	}
@@ -356,7 +359,7 @@ void AMainCharacter::EndReload()
 void AMainCharacter::StarMeleeAtaack()
 {
 	/** Check Movement Conditions*/
-	if (GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade || bIsSwitch)
+	if (GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade || bIsSwitching)
 	{ 
 		return; 
 	}
@@ -407,7 +410,7 @@ void AMainCharacter::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, A
 void AMainCharacter::StarGrenadeLauncher()
 {
 	/** Check Movement Conditions*/
-	if (GrenadeAmmo <= 0 || GetCombatStatus() == ECombatStatus::EMS_Grenade || bIsSwitch)
+	if (GrenadeAmmo <= 0 || GetCombatStatus() == ECombatStatus::EMS_Grenade || bIsSwitching)
 	{ 
 	     return;
 	}
@@ -473,29 +476,72 @@ void AMainCharacter::EndGrenadeLauncher() //Call By Anim Notify
 }
 
 
-
+/////////////////////////Star/ End SwitchWeapon ///////////////////
 void AMainCharacter::StarSwtichWeapon()
 {
-	if (GetCombatStatus() == ECombatStatus::EMS_Grenade || GetMovementStatus()==EMovementStatus::EMS_Switch || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Reload)
+	if (GetCombatStatus() == ECombatStatus::EMS_Grenade  || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Reload)
 	{
-		return;
+		bIsReload = false;
+		bIsGrenadeLauncher = false;
+	    bIsMeleeAttack = false;
+		StopMyMontage(0.1);
 	}
 	if (GetCombatStatus() == ECombatStatus::EMS_FireUnder || GetCombatStatus() == ECombatStatus::EMS_PointedFire)
 	{
 		EndShootByOther();
 	}
-	bIsSwitch = true;
+	bIsSwitching = true;
+	UpdatePlayerProperties();
+}
+void AMainCharacter::EndSwitchWeapom()
+{
+	bIsSwitching = false;
+	if (GetCurrentWeaponStatus() == ECurrentWeapon::EMS_Rifle)
+	{
+		Rocket->SetVisibility(true);
+		Weapon->SetVisibility(false);
+		SetCurrentWeaponStatus(ECurrentWeapon::EMS_Rocket);
+	}
+	else
+	{
+		Rocket->SetVisibility(false);
+		Weapon->SetVisibility(true);
+		SetCurrentWeaponStatus(ECurrentWeapon::EMS_Rifle);
+	}
 	UpdatePlayerProperties();
 }
 
-void AMainCharacter::EndSwitchWeapom()
+
+void AMainCharacter::ActivateCurrentUltimate()
 {
-	bIsSwitch = false;
-	Rocket->SetVisibility(true);
-	Weapon->SetVisibility(false);
-	SetCurrentWeaponStatus(ECurrentWeapon::EMS_Rocket);
-	UpdatePlayerProperties();
+	if (!bIsJumping && !bIsUltimate)
+	{
+		BP_StarAttackUltimate();
+		bIsUltimate = true;
+		GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::StarAttackUltimate, 0.5f, false, 0.5f);
+	}
+	
 }
+
+void AMainCharacter::StarAttackUltimate()
+{
+	GetWorldTimerManager().ClearTimer(AttackUltimateHandle);
+	GetCharacterMovement()->JumpZVelocity = 2500;
+	GetCharacterMovement()->AirControl = 3.0;
+	Jump();
+	StarSwtichWeapon();
+	bIsAttackUltimate = true;
+	GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::EndAttackUltimate, 15.0f, false, 15.0f);
+}
+
+void AMainCharacter::EndAttackUltimate()
+{
+	GetCharacterMovement()->GravityScale = 1.0;
+	bIsAttackUltimate = false;
+	RocketAmmo = 5;
+	GetWorldTimerManager().ClearTimer(AttackUltimateHandle);
+}
+
 
 
 ////////////////////////////////////////////////////////////////////
@@ -503,7 +549,6 @@ void AMainCharacter::EndSwitchWeapom()
 //   Basic Event Tick
 //
 ////////////////////////////////////////////////////////////////////
-
 void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -537,13 +582,25 @@ void AMainCharacter::Tick(float DeltaTime)
 		{
 			bIsJumping = false;
 			bIsJumpCalled = false;
-
 			BP_EndCameraJump();
+
+			if (GetCurrentWeaponStatus() == ECurrentWeapon::EMS_Rocket)
+			{
+				BP_EndAttackUltimate();
+				if (bIsUltimate)
+				{
+					bIsUltimate = false;
+				}
+				GetCharacterMovement()->JumpZVelocity = 600;
+				GetCharacterMovement()->AirControl = 0.02;
+				StarSwtichWeapon();
+			}
+			
 		}
 	}
 
 	///// Set Camera Rotation Movement with Pawn //// 
-	if(bIsGrenadeLauncherCalled || bIsMeleeAttackCalled)
+	if(!Camera->bUsePawnControlRotation)
 	{
 		CameraRotationWithPawn.Pitch = GetControlRotation().Pitch;
 	}
@@ -551,12 +608,12 @@ void AMainCharacter::Tick(float DeltaTime)
 }
 
 
+
 ////////////////////////////////////////////////////////////////////
 //
 //   Character Update Propertys and BP Functions
 //
 ////////////////////////////////////////////////////////////////////
-
 // UpdatePlayerPropertys // Status-Camera
 void AMainCharacter::UpdatePlayerProperties()
 {
@@ -596,23 +653,23 @@ void AMainCharacter::UpdatePlayerProperties()
 
 	//Movement Status
 
-	if ((bIsMoving && !bIsRuning && !bIsPointed && !bIsSwitch) || (bIsMoving && !bIsPointed && GetCombatStatus() == ECombatStatus::EMS_FireUnder && !bIsSwitch) || (bIsMoving && (GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade) && !bIsSwitch))
+	if ((bIsMoving && !bIsRuning && !bIsPointed && !bIsSwitching) || (bIsMoving && !bIsPointed && GetCombatStatus() == ECombatStatus::EMS_FireUnder && !bIsSwitching) || (bIsMoving && (GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade) && !bIsSwitching))
 	{
 		SetMovementStatus(EMovementStatus::EMS_Walking);
 	}
-	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay && GetCombatStatus() != ECombatStatus::EMS_FireUnder && !bIsReload && !bIsGrenadeLauncher && !bIsSwitch)
+	if (bIsMoving && bIsRuning && !bIsPointed && !bIsDelay && GetCombatStatus() != ECombatStatus::EMS_FireUnder && !bIsReload && !bIsGrenadeLauncher && !bIsSwitching)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Sprinting);
 	}
-	if (bIsPointed && GetCombatStatus() != ECombatStatus::EMS_Reload && GetCombatStatus() != ECombatStatus::EMS_Melee && GetCombatStatus() != ECombatStatus::EMS_Grenade && !bIsSwitch)
+	if (bIsPointed && GetCombatStatus() != ECombatStatus::EMS_Reload && GetCombatStatus() != ECombatStatus::EMS_Melee && GetCombatStatus() != ECombatStatus::EMS_Grenade && !bIsSwitching)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Pointing);
 	}
-	if (!bIsMoving && !bIsPointed || bIsDelay && !bIsPointed || !bIsMoving && ( GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade) && !bIsSwitch)
+	if (!bIsMoving && !bIsPointed || bIsDelay && !bIsPointed || !bIsMoving && ( GetCombatStatus() == ECombatStatus::EMS_Reload || GetCombatStatus() == ECombatStatus::EMS_Melee || GetCombatStatus() == ECombatStatus::EMS_Grenade) && !bIsSwitching)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Idle);
 	}
-	if (bIsSwitch)
+	if (bIsSwitching)
 	{
 		SetMovementStatus(EMovementStatus::EMS_Switch);
 	}
@@ -646,6 +703,7 @@ void AMainCharacter::UpdatePlayerProperties()
 		{
 			BP_StarPointedShoot();
 			bIsPointedShootCalled = true;
+
 		}
 	}
 	else
@@ -654,7 +712,6 @@ void AMainCharacter::UpdatePlayerProperties()
 		{
 			BP_EndPointedShoot();
 			bIsPointedShootCalled = false;
-
 		}
 	}
 
@@ -691,6 +748,13 @@ void AMainCharacter::UpdatePlayerProperties()
 			BP_StarCameraPointed();
 			bIsPointedCalled = true;
 			SpringArm->bEnableCameraLag = false;
+
+			/**Rocket Scoop Logic*/
+			if (GetCurrentWeaponStatus() == ECurrentWeapon::EMS_Rocket)
+			{
+				SetScoopVisibility(true);
+				Rocket->SetVisibility(false);
+			}
 		}
 	}
 	else
@@ -700,6 +764,13 @@ void AMainCharacter::UpdatePlayerProperties()
 			BP_EndCameraPointed();
 			bIsPointedCalled = false;
 			SpringArm->bEnableCameraLag = true;
+
+			/**Rocket Scoop Logic*/
+			if (GetCurrentWeaponStatus() == ECurrentWeapon::EMS_Rocket)
+			{
+				SetScoopVisibility(false);
+				Rocket->SetVisibility(true);
+			}
 		}
 	}
 
@@ -891,7 +962,7 @@ void AMainCharacter::Shoot()
 	}
 }
 
-void AMainCharacter::UltimateShoot()
+void AMainCharacter::RocketShoot()
 {
 	if (IsValid(RocketClass))
 	{
@@ -900,7 +971,13 @@ void AMainCharacter::UltimateShoot()
 		MuzzleRotation.Pitch = MuzzleRotation.Pitch - 4.f;
 		AOR_RocketProjectile* MyRocket=GetWorld()->SpawnActor<AOR_RocketProjectile>(RocketClass, MuzzleLocation, MuzzleRotation);
 		MyRocket->SetMain(this);
-	}
+		RocketAmmo--;
+
+		if (RocketAmmo == 0 && bIsAttackUltimate)
+		{
+			EndAttackUltimate();
+		}
+	}	
 }
 
 
@@ -942,6 +1019,8 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("MeleeAttack", IE_Pressed, this, &AMainCharacter::StarMeleeAtaack);
 
 	PlayerInputComponent->BindAction("Grenade", IE_Pressed, this, &AMainCharacter::StarGrenadeLauncher);
+
+	PlayerInputComponent->BindAction("CurrentUltimate", IE_Pressed, this, &AMainCharacter::ActivateCurrentUltimate);
 
 	
 
