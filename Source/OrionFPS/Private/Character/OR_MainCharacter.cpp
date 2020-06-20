@@ -257,7 +257,8 @@ void AMainCharacter::StarShoot()
 		if (RocketAmmo > 0 && bIsAttackUltimate)
 		{
 			RocketShoot();
-			
+			bIsShooting = true;
+			UpdatePlayerProperties();
 		}
 		
 		return;
@@ -964,19 +965,29 @@ void AMainCharacter::Shoot()
 
 void AMainCharacter::RocketShoot()
 {
-	if (IsValid(RocketClass))
+	if (IsValid(RocketClass) && IsValid(Weapon) && IsValid(FinalGun))
 	{
+		/*Get Socket Transforms*/
 		FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
 		FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
-		MuzzleRotation.Pitch = MuzzleRotation.Pitch - 4.f;
-		AOR_RocketProjectile* MyRocket=GetWorld()->SpawnActor<AOR_RocketProjectile>(RocketClass, MuzzleLocation, MuzzleRotation);
-		MyRocket->SetMain(this);
-		RocketAmmo--;
+		MuzzleRotation.Pitch = MuzzleRotation.Pitch - 4.f; //	Adjust Projectiel Direction
 
+		/*Spawn Projectile*/
+		AOR_RocketProjectile* MyRocket = GetWorld()->SpawnActor<AOR_RocketProjectile>(RocketClass, MuzzleLocation, MuzzleRotation);
+		MyRocket->SetMain(this);
+		
+		/*Check State*/
+		if (GetMovementStatus()!= EMovementStatus::EMS_Pointing)
+		{
+			PlayMyMontage(ShootMontage, 1.0f, FName("Shoot01"));
+			UGameplayStatics::SpawnEmitterAttached(FinalGun, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(2.0f));
+		}
+		/*Check Ammo and State*/
 		if (RocketAmmo == 0 && bIsAttackUltimate)
 		{
 			EndAttackUltimate();
 		}
+		RocketAmmo--;
 	}	
 }
 
@@ -1023,7 +1034,5 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("CurrentUltimate", IE_Pressed, this, &AMainCharacter::ActivateCurrentUltimate);
 
 	
-
-
 }
 

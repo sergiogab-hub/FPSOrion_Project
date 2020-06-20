@@ -75,7 +75,7 @@ void AOR_RocketProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 		{
 			FRotator RotationImpact = UKismetMathLibrary::FindLookAtRotation(Hit.Location, MainCharacter->GetActorLocation());
 			RotationImpact.Pitch = RotationImpact.Pitch + 50.F;
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, Hit.Location, RotationImpact, FVector(0.8f), true);//0.4*/
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, Hit.Location, RotationImpact, FVector(1.0f), true);//0.4*/
 			UGameplayStatics::ApplyRadialDamage(GetWorld(), 50, GetActorLocation(), 800, nullptr, ExplotionExceptions, this, MainCharacter->GetInstigatorController());
 		}
 	}
