@@ -56,32 +56,37 @@ void UOR_HealthComponent::TakingDamage(AActor* DamagedActor, float Damage, const
 		GetWorld()->GetTimerManager().SetTimer(BurningDamageHandle, AlertDelegate, 1.0, true, 0.0);
 		return;
 	}
-	
-	const UBurningDamageType* BurningDamage = Cast<UBurningDamageType>(DamageType);
-	
-	if (IsValid(BurningDamage))
-	{
-		 if (BurningDamage->GetBurningProperty())
-		 {
-			 BurningDuration = BurningDamage->GetBurningDuration() + 1 ;
-			 Damage = Damage / BurningDuration;
-			 FTimerDelegate AlertDelegate = FTimerDelegate::CreateUObject(this, &UOR_HealthComponent::BurningEffectDamage, DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
-			 GetWorld()->GetTimerManager().SetTimer(BurningDamageHandle, AlertDelegate, 1.0, true, 0.0);
-			
-		 }
-		 
-	}
-	else 
-	{
-		CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.0F, MaxHealth);
 
-		if (CurrentHealth == 0)
+	if (IsValid(DamageType))
+	{
+		const UBurningDamageType* BurningDamage = Cast<UBurningDamageType>(DamageType);
+
+		if (IsValid(BurningDamage))
 		{
-			bIsDead = true;
-		}
+			if (BurningDamage->GetBurningProperty())
+			{
+				if (BurningDamage->GetBurningDuration() + 1 > 0)
+				{
+					BurningDuration = BurningDamage->GetBurningDuration() + 1;
+					Damage = Damage / BurningDuration;
+					FTimerDelegate AlertDelegate = FTimerDelegate::CreateUObject(this, &UOR_HealthComponent::BurningEffectDamage, DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
+					GetWorld()->GetTimerManager().SetTimer(BurningDamageHandle, AlertDelegate, 1.0, true, 0.0);
+					return;
+				}
+			}
 
-		OnHealthChangeDelegate.Broadcast(this, DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);		
-	}	
+		}
+	}
+	
+	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.0F, MaxHealth);
+
+	if (CurrentHealth == 0)
+	{
+		bIsDead = true;
+	}
+
+	OnHealthChangeDelegate.Broadcast(this, DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);		
+		
 }
 
 void UOR_HealthComponent::BurningEffectDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)

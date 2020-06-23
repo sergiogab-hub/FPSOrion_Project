@@ -144,6 +144,8 @@ private:
 	void ActivateCurrentUltimate();
 
 
+	////////////
+    void SetupMainReferences();
 
 
 	

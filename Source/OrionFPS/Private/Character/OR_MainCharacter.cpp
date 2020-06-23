@@ -117,9 +117,6 @@ AMainCharacter::AMainCharacter()
 	
 	bHastoDestroy = false;
 	
-
-	
-	
 }
 
 
@@ -132,6 +129,18 @@ void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//SetUp References
+	SetupMainReferences();
+
+	//SetRocketWeaponInitialVisibility
+	Rocket->SetVisibility(false);
+	
+}
+
+
+//Main References
+void AMainCharacter::SetupMainReferences()
+{
 	// Set AnimInstance
 	MainAnimInstance = Arms->GetAnimInstance();
 
@@ -143,19 +152,15 @@ void AMainCharacter::BeginPlay()
 
 	// HealthDelegate
 	Health->OnHealthChangeDelegate.AddDynamic(this, &AMainCharacter::OnHealthChange);
-
-	//SetRocketWeaponInitialVisibility
-	Rocket->SetVisibility(false);
-	
 }
 
 
-////////////////////////////////////////////////////////////////////
-//
-//   Character Player Input Movement
-//
-////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////
+//
+//   Character Player Input 
+//
+////////////////////////////////////////////////////////////////////
 
 //////////Player Basic Movement Inputs Handles///////
 void AMainCharacter::MoveForward(float value)
@@ -186,13 +191,6 @@ void AMainCharacter::RotateYaw(float value)
 }
 
 
-
-////////////////////////////////////////////////////////////////////
-//
-//   Character Player Movement Functions
-//
-////////////////////////////////////////////////////////////////////
-
 ////////Star / End - Jump Space Bar Method /////////
 void AMainCharacter::StarJump()
 {
@@ -202,12 +200,11 @@ void AMainCharacter::StarJump()
 		UpdatePlayerProperties();
 	}
 }
+
 void AMainCharacter::EndJump()
 {
 	StopJumping();
 }
-
-
 
 /////////// Star / End - Sprint Left Shift Method ///////
 void AMainCharacter::StarSprint()
@@ -254,12 +251,13 @@ void AMainCharacter::EndGunPoint()
 	UpdatePlayerProperties();
 }
 
+
+
 ////////////////////////////////////////////////////////////////////
 //
 //   Character Player Combat Functions
 //
 ////////////////////////////////////////////////////////////////////
-
 
 ///////////////////// Star/End Shoot ///////////////////
 void AMainCharacter::StarShoot()
@@ -357,6 +355,7 @@ void AMainCharacter::StarReload()
 		UGameplayStatics::SpawnEmitterAttached(SmokeReload, Weapon, FName("RifleMag"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.13f, 0.01, 0.01f));
 	}
 }
+
 void AMainCharacter::EndReload()
 {
 	/** Set Variables / Stop Montage */
@@ -397,6 +396,7 @@ void AMainCharacter::StarMeleeAtaack()
 	PlayMyMontage(MeleMontage, 1.0f, "Melee");
 
 }
+
 void AMainCharacter::EndMeleeAttack()
 {
 
@@ -408,10 +408,12 @@ void AMainCharacter::EndMeleeAttack()
 	/** If Left Mouse Button Still Pressed Continue Shooting */
 	if (bIsKeyShootPressed) { StarShoot(); }
 }
+
 void AMainCharacter::SetEnumMeleeCollision(ECollisionEnabled::Type CollisionState) //Call By Anim Notify
 {
 	MeleeDetector->SetCollisionEnabled(CollisionState);
 }
+
 void AMainCharacter::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (IsValid(OtherActor))
@@ -457,10 +459,8 @@ void AMainCharacter::StarGrenadeLauncher()
 	bIsGrenadeLauncher = true;
 	PlayMyMontage(GrenadeMontage, 0.8f, "Grenade");
 	UpdatePlayerProperties();	
-
-
-
 }
+
 void AMainCharacter::SpawnGrenadeLauncher() //Call By Anim Notify
 {
 	if (IsValid(LauncherClass))
@@ -474,6 +474,7 @@ void AMainCharacter::SpawnGrenadeLauncher() //Call By Anim Notify
 		Launcher->SetMain(this);
 	}
 }
+
 void AMainCharacter::EndGrenadeLauncher() //Call By Anim Notify
 {
 	if (bIsRuningControlDelay)
@@ -509,6 +510,7 @@ void AMainCharacter::StarSwtichWeapon()
 	bIsSwitching = true;
 	UpdatePlayerProperties();
 }
+
 void AMainCharacter::EndSwitchWeapom()
 {
 	bIsSwitching = false;
@@ -528,6 +530,7 @@ void AMainCharacter::EndSwitchWeapom()
 }
 
 
+///////////////////////// Ultimate ///////////////////
 void AMainCharacter::ActivateCurrentUltimate()
 {
 	if (!bIsJumping && !bIsUltimate)
@@ -558,6 +561,7 @@ void AMainCharacter::EndAttackUltimate()
 
 
 
+///////////////////////// One Heatl Change Delegate ///////////////////
 void AMainCharacter::OnHealthChange(UOR_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (CurrentHealthComponent->GetIsDead())
@@ -875,7 +879,7 @@ void AMainCharacter::UpdatePlayerProperties()
 
 
 ////////////////////////
-//Play - Stop Montage //
+//my Play - Stop Montage //
 ////////////////////////
 void AMainCharacter::PlayMyMontage(UAnimMontage* MontageToPlay, float Ratio, FName Section)
 {
@@ -901,7 +905,7 @@ void AMainCharacter::StopMyMontage(float RatioStop)
 
 ////////////////////////////////////////////////////////////////////
 //
-//  Shot Function
+//  ShotS Function
 //
 ////////////////////////////////////////////////////////////////////
 void AMainCharacter::Shoot()

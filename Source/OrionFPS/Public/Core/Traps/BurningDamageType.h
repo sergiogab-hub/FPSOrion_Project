@@ -24,7 +24,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "DamageProperty")
 		bool bIsHaveBurningEffect;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "DamageProperty")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "DamageProperty", meta = (ClampMax = 10.0, UMax = 10.0))
 		int32 BurningEffectDuration;
 
 
