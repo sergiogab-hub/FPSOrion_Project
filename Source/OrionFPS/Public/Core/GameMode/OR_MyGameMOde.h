@@ -11,12 +11,32 @@
  */
 
 class AMainCharacter;
+class AOR_SpectetingCamera;
+
 
 UCLASS()
 class ORIONFPS_API AOR_MyGameMOde : public AGameModeBase
 {
 	GENERATED_BODY()
 
+protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spectating Camera")
+		float SpectatingBlendTime;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spectating Camera")
+		AOR_SpectetingCamera* VictoryCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spectating Camera")
+		AOR_SpectetingCamera* GameOverCamera;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	void SetupSpectatingCameras();
+
+	void MoveCameratoSpectatingPoint(AOR_SpectetingCamera* SpectatingCamera , AMainCharacter* Main);
 
 public:
 

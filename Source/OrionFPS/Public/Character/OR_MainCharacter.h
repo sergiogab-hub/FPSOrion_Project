@@ -41,14 +41,14 @@ enum class EMovementStatus :uint8
 UENUM(BlueprintType)
 enum class ECombatStatus :uint8
 {
-	EMS_NoCombat UMETA(DisplayName = "NoCombat"),
-	EMS_FireUnder UMETA(DisplayName = "FireUnder"),
-	EMS_PointedFire UMETA(DisplayName = "PointedFire"),
-	EMS_Reload UMETA(DisplayName = "Reload"),
-	EMS_Melee UMETA(DisplayName = "Melee"),
-	EMS_Grenade UMETA (DisplayName="Grenade"),
+	ECS_NoCombat UMETA(DisplayName = "NoCombat"),
+	ECS_FireUnder UMETA(DisplayName = "FireUnder"),
+	ECS_PointedFire UMETA(DisplayName = "PointedFire"),
+	ECS_Reload UMETA(DisplayName = "Reload"),
+	ECS_Melee UMETA(DisplayName = "Melee"),
+	ECS_Grenade UMETA (DisplayName="Grenade"),
 	
-	EMS_MAX UMETA(DisplayName = "DefaultMAX")
+	ECS_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
 
@@ -56,11 +56,11 @@ enum class ECombatStatus :uint8
 UENUM(BlueprintType)
 enum class ECurrentWeapon :uint8
 {
-	EMS_Rifle UMETA(DisplayName = "Rifle"),
-	EMS_Rocket UMETA(DisplayName = "Rocket"),
+	ECW_Rifle UMETA(DisplayName = "Rifle"),
+	ECW_Rocket UMETA(DisplayName = "Rocket"),
 
 
-	EMS_MAX UMETA(DisplayName = "DefaultMAX")
+	ECW_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
 
@@ -286,6 +286,9 @@ protected:
 	//
 	////////////////////////////////////////////////////////////////////
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main")
+	    bool bHastoDestroy;
+
 		  ////////////////Movement Character Variables//////////////
 
 	/** Rotation Turn Speed Pitch/Yaw*/
@@ -395,7 +398,7 @@ protected:
 		int32 GrenadeAmmo;
 
 
-	       ////////////////////Combat Character/////////////////////
+	       ////////////////////Ultimate Character/////////////////////
 
 	/** Is ultimate Active */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
@@ -468,6 +471,8 @@ public:
 	FORCEINLINE bool GetKeyBoolValue() const { return Key; }
 	FORCEINLINE bool GetIsRuning() const { return bIsRuning; }
 	FORCEINLINE bool GetIsPointed() const { return bIsPointed; }
+
+	FORCEINLINE bool HasToDestroy() const { return bHastoDestroy; }
 
 	FORCEINLINE UOR_HealthComponent* GetHealthComponent() { return Health;}
 
