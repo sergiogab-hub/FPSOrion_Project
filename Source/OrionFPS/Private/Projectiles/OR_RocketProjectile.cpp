@@ -62,7 +62,7 @@ void AOR_RocketProjectile::BeginPlay()
 	if (IsValid(Trail))
 
 	{
-		UGameplayStatics::SpawnEmitterAttached(Trail, Mesh, FName("RocketLauncher"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
+		UGameplayStatics::SpawnEmitterAttached(Trail, Mesh, FName("RocketLauncher"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.2f));
 	}
 	
 }

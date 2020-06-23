@@ -6,15 +6,20 @@
 #include "GameFramework/Character.h"
 #include "OR_MainCharacter.generated.h"
 
+/*UE CLASS*/
 class UCameraComponent;
 class USkeletalMeshComponent;
 class USpringArmComponent;
 class UAnimMontage;
 class UAnimInstance;
+class UParticleSystem;
+
+/*MY CLASS*/
 class AProjectile;
 class AOR_LauncherProjectile;
 class AOR_RocketProjectile;
-class UParticleSystem;
+class UOR_HealthComponent;
+class AOR_MyGameMOde;
 
 
 ////// Movement Enum States //////
@@ -152,7 +157,7 @@ protected:
 	//
 	////////////////////////////////////////////////////////////////////
 
-				   //////// Movement Character Components///////
+				   //////// Character Components///////
 
 	/** Main Camera Component for Player*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
@@ -178,19 +183,27 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		USpringArmComponent* SpringArm;
 
-	/** Spring Arm (Camera-Arms) for Player*/
+	/** Mele Capsule Collision*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		UCapsuleComponent* MeleeDetector;
 
+	/** Weapon Socket Name*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		FName WeaponSocketName;
 
+	/** Melle Socket Name*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		FName MeleeCapsuleSocketName;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		UOR_HealthComponent* Health;
+
+	/** Game Mode Reference*/
+		AOR_MyGameMOde* GameModeReference;
 
 
-	                 /////////// Combat Character ///////////
+
+	                 ///////////  Character ///////////
 
 	/////Montages
 
@@ -456,6 +469,8 @@ public:
 	FORCEINLINE bool GetIsRuning() const { return bIsRuning; }
 	FORCEINLINE bool GetIsPointed() const { return bIsPointed; }
 
+	FORCEINLINE UOR_HealthComponent* GetHealthComponent() { return Health;}
+
 	void SetEnumMeleeCollision(ECollisionEnabled::Type CollisionState);
 
 public:
@@ -617,6 +632,12 @@ public:
 		void  EndAttackUltimate();
 	    /** Shoot FTimerHablde */
 	     FTimerHandle AttackUltimateHandle;
+
+	 ////////////////// Delegate Component ///////////////////////
+
+	 UFUNCTION(BlueprintCallable, Category = "Main|Component")
+		 void OnHealthChange(UOR_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
 
 
 	////////////////// Montage Functions ///////////////////////

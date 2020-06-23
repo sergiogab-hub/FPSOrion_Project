@@ -2,9 +2,14 @@
 
 
 #include "Character/OR_MainCharacter.h"
+#include "Core/GameMode/OR_MyGameMOde.h"
+#include "Components/OR_HealthComponent.h"
+#include "Projectiles/OR_RocketProjectile.h"
 #include "Projectiles/OR_BulletProjectile.h"
 #include "Projectiles/OR_LauncherProjectile.h"
-#include "Projectiles/OR_RocketProjectile.H"
+
+
+
 
 #include "Engine/World.h"
 #include "TimerManager.h"
@@ -56,6 +61,10 @@ AMainCharacter::AMainCharacter()
 	MeleeDetector->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MeleeDetector->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	MeleeDetector->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	//HealthComponent
+
+	Health = CreateDefaultSubobject<UOR_HealthComponent>(TEXT("Health"));
 
 	// Set Initial Default Movement Status
 	MovementStatus = EMovementStatus::EMS_Idle;
@@ -126,8 +135,14 @@ void AMainCharacter::BeginPlay()
 	// Set AnimInstance
 	MainAnimInstance = Arms->GetAnimInstance();
 
+	//Set Game Mode
+	GameModeReference = Cast<AOR_MyGameMOde>(GetWorld()->GetAuthGameMode());
+
 	// Mele Combat
 	MeleeDetector->OnComponentBeginOverlap.AddDynamic(this, &AMainCharacter::MakeMeleeDamage);
+
+	// HealthDelegate
+	Health->OnHealthChangeDelegate.AddDynamic(this, &AMainCharacter::OnHealthChange);
 
 	//SetRocketWeaponInitialVisibility
 	Rocket->SetVisibility(false);
@@ -523,7 +538,6 @@ void AMainCharacter::ActivateCurrentUltimate()
 	}
 	
 }
-
 void AMainCharacter::StarAttackUltimate()
 {
 	GetWorldTimerManager().ClearTimer(AttackUltimateHandle);
@@ -534,13 +548,27 @@ void AMainCharacter::StarAttackUltimate()
 	bIsAttackUltimate = true;
 	GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::EndAttackUltimate, 15.0f, false, 15.0f);
 }
-
 void AMainCharacter::EndAttackUltimate()
 {
 	GetCharacterMovement()->GravityScale = 1.0;
 	bIsAttackUltimate = false;
 	RocketAmmo = 5;
 	GetWorldTimerManager().ClearTimer(AttackUltimateHandle);
+}
+
+
+
+void AMainCharacter::OnHealthChange(UOR_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (CurrentHealthComponent->GetIsDead())
+	{
+		if (IsValid(GameModeReference))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Ta morto xD"));
+			GameModeReference->GameOver(this);
+		}
+		
+	}
 }
 
 
@@ -975,7 +1003,7 @@ void AMainCharacter::RocketShoot()
 		/*Spawn Projectile*/
 		AOR_RocketProjectile* MyRocket = GetWorld()->SpawnActor<AOR_RocketProjectile>(RocketClass, MuzzleLocation, MuzzleRotation);
 		MyRocket->SetMain(this);
-		
+		RocketAmmo--;
 		/*Check State*/
 		if (GetMovementStatus()!= EMovementStatus::EMS_Pointing)
 		{
@@ -987,7 +1015,7 @@ void AMainCharacter::RocketShoot()
 		{
 			EndAttackUltimate();
 		}
-		RocketAmmo--;
+		
 	}	
 }
 
