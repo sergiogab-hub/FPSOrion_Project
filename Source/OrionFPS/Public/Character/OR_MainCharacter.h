@@ -89,7 +89,7 @@ private:
 
 	////////////////////////////////////////////////////////////////////
 	//
-	//  Player Input
+	//  Player Input / Functions
 	//
 	////////////////////////////////////////////////////////////////////
 
@@ -105,17 +105,14 @@ private:
 	/**  Right/Left control mouse input */
 	void RotateYaw(float value);
 
+
 	/**  Jump Space Bar input */
 	void StarJump();
 	void EndJump();
 
-
 	/**  Sprint Left Shift Input */
 	void StarSprint();
 	void StopSprint();
-
-
-
 
 	/**  Pointed Weapon Right Mouse Input */
 	void StarGunPoint();
@@ -127,30 +124,24 @@ private:
 	void EndShootByOther();
 
 	/**  Star Reload Left Mouse */
-	void StarReload();
-	//EndReload() -> BP Function
-
+	void StarReload(); //EndReload() -> BP Function
+	
 	/**  Star Melee Attack */
-	void StarMeleeAtaack();
-	//EndMeleeAttack() -> BP Function
-
+	void StarMeleeAtaack(); //EndMeleeAttack() -> BP Function
+	
 	/**  Star Grenade Launcher */
-	void StarGrenadeLauncher();
-	//EndGrenadeLauncher() -> BP Function
-
-	void StarSwtichWeapon();
-	//EndSwitch() -> BP Function
-
+	void StarGrenadeLauncher(); //EndGrenadeLauncher() -> BP Function
+	
+	/**  Star Switch Weapon */
+	void StarSwtichWeapon(); //EndSwitch() -> BP Function
+	
+	/**  Activate Current Ultimate */
 	void ActivateCurrentUltimate();
 
-
-	////////////
+	/** BeginPlay Call Function to Set Player Object/Class References */
     void SetupMainReferences();
 
 
-	
-
-	
 
 protected:
 	////////////////////////////////////////////////////////////////////
@@ -162,79 +153,89 @@ protected:
 				   //////// Character Components///////
 
 	/** Main Camera Component for Player*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
 		UCameraComponent* Camera;
 
-	/** Main Camera RelativeRotationVariable*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
-		FRotator CameraRotationWithPawn;
-
 	/** Arms Skeletal Mesh for Player*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
 		USkeletalMeshComponent* Arms;
 
 	/** Weapon Skeletal Mesh for Player*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
 		USkeletalMeshComponent* Weapon;
 
-	/** Weapon Skeletal Mesh for Player*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	/** Rocket Skeletal Mesh for Player*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
 		USkeletalMeshComponent* Rocket;
 
 	/** Spring Arm (Camera-Arms) for Player*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
 		USpringArmComponent* SpringArm;
 
+	/** Health Component*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
+		UOR_HealthComponent* Health;
+
 	/** Mele Capsule Collision*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
 		UCapsuleComponent* MeleeDetector;
 
+
+	                  //////// Character Propertys///////
+
+
+	/** Main Camera RelativeRotationVariable*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterProperty")
+		FRotator CameraRotationWithPawn;
+
 	/** Weapon Socket Name*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterProperty")
 		FName WeaponSocketName;
 
 	/** Melle Socket Name*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterProperty")
 		FName MeleeCapsuleSocketName;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
-		UOR_HealthComponent* Health;
+
+	                  ///////////  References ///////////
 
 	/** Game Mode Reference*/
+	UPROPERTY(BlueprintReadOnly, Category = "Main|References")
 		AOR_MyGameMOde* GameModeReference;
 
+	/** Anim Instance */
+	UPROPERTY(BlueprintReadOnly, Category = "Main|References")
+			UAnimInstance* MainAnimInstance;
 
 
-	                 ///////////  Character ///////////
 
-	/////Montages
+	                  ///////////  Montages ///////////
+
 
 	/** Under Shoot Montage*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montages")
 	    UAnimMontage* ShootMontage;
 
 	/** Pointed Shoot Montage */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montages")
 		UAnimMontage* PointedShoot_Montage;
 
 	/** Reload Montage */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montages")
 		UAnimMontage* ReloadMontage;
 
 	/** Mele Montage */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montages")
 		UAnimMontage* MeleMontage;
 
 	/** Mele Montage */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montage")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montages")
 		UAnimMontage* GrenadeMontage;
 
-	/** Anim Instance */
-	UPROPERTY(BlueprintReadOnly, Category = "Main|Montage")
-		UAnimInstance* MainAnimInstance;
 
 
-	/////ParticleSystem
+
+	                   /////////// Particle System ///////////
 
 	/** Muzzle Particle System */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
@@ -265,18 +266,18 @@ protected:
 		UParticleSystem* FinalGun;
 
 
-	                   ///////// Projectile Class /////////
+	                      ///////// Projectile Class /////////
 
 	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	UPROPERTY(EditDefaultsOnly, Category = "Main|Projectiles")
 		TSubclassOf<AProjectile> BulletClass;
 
 	/** Projectile Grenade to spawn */
-	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	UPROPERTY(EditDefaultsOnly, Category = "Main|Projectiles")
 		TSubclassOf<AOR_LauncherProjectile> LauncherClass;
 
 	/** Projectile Rocket to spawn */
-	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	UPROPERTY(EditDefaultsOnly, Category = "Main|Projectiles")
 		TSubclassOf<AOR_RocketProjectile> RocketClass;
 
 
@@ -333,11 +334,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		float CurrentVelocity;
 
+	/** IsSwitching Control Varaiblñe  */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		float bIsSwitching;
 
 	/** Launcher Pad Variable Key*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|CharacterMovement") ////////Temporal
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|CharacterMovement") ////////Temporal tarea
 		bool Key = false;
 
 	/**Tarea */
@@ -403,23 +405,23 @@ protected:
 	       ////////////////////Ultimate Character/////////////////////
 
 	/** Is ultimate Active */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bIsUltimate;
 
 	/** Rockry AmmoCount */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 	   int32 RocketAmmo;
 
 	/** Is ultimate Active */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bIsAttackUltimate;
 
 	/** Is ultimate Active */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bIsDefenseUltimate;
 
 	/** Is ultimate Active */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterCombat")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bIsMovilityUltimate;
 
 	
@@ -440,6 +442,7 @@ public:
 
 	/** Set the New Movement Status*/
 	FORCEINLINE void SetMovementStatus(EMovementStatus Status) { MovementStatus = Status; } 
+
 	/** Get Current Movement Status*/
 	FORCEINLINE EMovementStatus GetMovementStatus()  const { return MovementStatus; } 
 
@@ -452,6 +455,7 @@ public:
 
 	/** Set the New Combat Status*/
 	FORCEINLINE void SetCombatStatus(ECombatStatus Status) { CombatStatus = Status; } 
+
 	/** Get Current Combat Status*/
 	FORCEINLINE ECombatStatus GetCombatStatus() const { return CombatStatus; } 
 
@@ -463,6 +467,7 @@ public:
 
 	/** Set the New Combat Status*/
 	FORCEINLINE void SetCurrentWeaponStatus (ECurrentWeapon Status) { CurrentWeaponStatus = Status; }
+
 	/** Get Current Combat Status*/
 	FORCEINLINE ECurrentWeapon  GetCurrentWeaponStatus() const { return CurrentWeaponStatus; }
 
@@ -470,8 +475,11 @@ public:
 
 	                        /////// Character Variables //////
 
+
 	FORCEINLINE bool GetKeyBoolValue() const { return Key; }
+
 	FORCEINLINE bool GetIsRuning() const { return bIsRuning; }
+
 	FORCEINLINE bool GetIsPointed() const { return bIsPointed; }
 
 	FORCEINLINE bool HasToDestroy() const { return bHastoDestroy; }
@@ -483,7 +491,7 @@ public:
 public:
 	////////////////////////////////////////////////////////////////////
 	//
-	//  Character BP_Functions
+	//  Character BP_Camera_Functions
 	//
 	////////////////////////////////////////////////////////////////////
 
@@ -558,27 +566,27 @@ public:
 
 
 	              /////////////Ultimate BP Functions /////////////////
-
-	/**Scoop Function*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_Ultimates")
+		/**Scoop Function*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEvents")
 		void SetScoopVisibility(bool Visibilty);
 
 	/**Star Attack Camera Logic*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_Ultimates")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEvents")
 		void BP_StarAttackUltimate();
 
 	/**Star Attack Camera Logic*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_Ultimates")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEventss")
 		void BP_EndAttackUltimate();
 
 	/**ShootRocketCameraLogic*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_Ultimates")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEvents")
 		void BP_ShootRocket();
+
 
 	             /////////////Death State BP Functions /////////////////
 
 	/**Deast*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_Ultimates")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_MovementEvents")
 		void BP_Death();
 
 
@@ -599,7 +607,7 @@ public:
 		void UpdatePlayerProperties();
 
 	/*** End Switch Weapon*/
-	UFUNCTION(BlueprintCallable, Category = "Main|Movement")
+	UFUNCTION(BlueprintCallable, Category = "Main|haracterMovement")
 		void EndSwitchWeapom();
 
 
@@ -609,45 +617,52 @@ public:
 	     /** Shoot Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void Shoot();
-	     /** Shoot Function*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat") 
-		void RocketShoot();
+
 	    /** Shoot FTimerHablde */
 	   FTimerHandle ShootHandle;
    
-
 	     /*** End Reload Function*/
 	UFUNCTION(BlueprintCallable , Category= "Main|CharacterCombat")
 	    void EndReload();
 
-
 		/*** End MeleeAttack Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void EndMeleeAttack();
+
 	    /*** Make Mele Damage*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 	    void MakeMeleeDamage( UPrimitiveComponent* OverlappedComponent , AActor* OtherActor , UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-
 		/*** End Grenade Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void EndGrenadeLauncher();
+
 	/*** End Reload Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void SpawnGrenadeLauncher();
 
 
+	////////////Ultimates Functions ////////////////////////////////
+
+	/** Shoot Rocket Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+		void RocketShoot();
+
 	/***Star Attack Ultimate Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void  StarAttackUltimate();
+
 	/***End Attack Ultimate Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void  EndAttackUltimate();
+
 	    /** Shoot FTimerHablde */
 	     FTimerHandle AttackUltimateHandle;
 
+
 	 ////////////////// Delegate Component ///////////////////////
 
+	 /** Health Delegate Component */
 	 UFUNCTION(BlueprintCallable, Category = "Main|Component")
 		 void OnHealthChange(UOR_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 

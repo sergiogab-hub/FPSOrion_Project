@@ -63,10 +63,9 @@ AMainCharacter::AMainCharacter()
 	MeleeDetector->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	//HealthComponent
-
 	Health = CreateDefaultSubobject<UOR_HealthComponent>(TEXT("Health"));
 
-	// Set Initial Default Movement Status
+	// Set Initial Default  Status
 	MovementStatus = EMovementStatus::EMS_Idle;
 	CurrentWeaponStatus = ECurrentWeapon::ECW_Rifle;
 
@@ -132,6 +131,7 @@ void AMainCharacter::BeginPlay()
 	//SetUp References
 	SetupMainReferences();
 
+
 	//SetRocketWeaponInitialVisibility
 	Rocket->SetVisibility(false);
 	
@@ -158,7 +158,7 @@ void AMainCharacter::SetupMainReferences()
 
 ////////////////////////////////////////////////////////////////////
 //
-//   Character Player Input 
+//   Character Player Input / Movement
 //
 ////////////////////////////////////////////////////////////////////
 
@@ -251,6 +251,41 @@ void AMainCharacter::EndGunPoint()
 	UpdatePlayerProperties();
 }
 
+/////////////////////////Star/ End SwitchWeapon ///////////////////
+void AMainCharacter::StarSwtichWeapon()
+{
+	if (GetCombatStatus() == ECombatStatus::ECS_Grenade || GetCombatStatus() == ECombatStatus::ECS_Melee || GetCombatStatus() == ECombatStatus::ECS_Reload)
+	{
+		bIsReload = false;
+		bIsGrenadeLauncher = false;
+		bIsMeleeAttack = false;
+		StopMyMontage(0.1);
+	}
+	if (GetCombatStatus() == ECombatStatus::ECS_FireUnder || GetCombatStatus() == ECombatStatus::ECS_PointedFire)
+	{
+		EndShootByOther();
+	}
+	bIsSwitching = true;
+	UpdatePlayerProperties();
+}
+
+void AMainCharacter::EndSwitchWeapom() // Call By Anim Notify
+{
+	bIsSwitching = false;
+	if (GetCurrentWeaponStatus() == ECurrentWeapon::ECW_Rifle)
+	{
+		Rocket->SetVisibility(true);
+		Weapon->SetVisibility(false);
+		SetCurrentWeaponStatus(ECurrentWeapon::ECW_Rocket);
+	}
+	else
+	{
+		Rocket->SetVisibility(false);
+		Weapon->SetVisibility(true);
+		SetCurrentWeaponStatus(ECurrentWeapon::ECW_Rifle);
+	}
+	UpdatePlayerProperties();
+}
 
 
 ////////////////////////////////////////////////////////////////////
@@ -278,7 +313,7 @@ void AMainCharacter::StarShoot()
 	}
 
 
-	/** Check Movement Conditions */
+	/** Normal Shoot Check Movement Conditions */
 	if (WeaponAmmo <= 0)
 	{
 		StarReload();
@@ -356,7 +391,7 @@ void AMainCharacter::StarReload()
 	}
 }
 
-void AMainCharacter::EndReload()
+void AMainCharacter::EndReload() //Call by Anim Notify
 {
 	/** Set Variables / Stop Montage */
 	WeaponAmmo = 50;
@@ -367,7 +402,6 @@ void AMainCharacter::EndReload()
 	/** If Left Mouse Button Still Pressed Continue Shooting */
 	if (bIsKeyShootPressed) { StarShoot(); }	
 }
-
 
 
 //////////////////////////////Star/ End MeleeAttack ///////////////////
@@ -423,7 +457,6 @@ void AMainCharacter::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, A
 }
 
 
-
 /////////////////////////Star/ End GrenadeLauncher ///////////////////
 void AMainCharacter::StarGrenadeLauncher()
 {
@@ -467,7 +500,7 @@ void AMainCharacter::SpawnGrenadeLauncher() //Call By Anim Notify
 	{
 		FVector GrenadeLocation = Arms->GetSocketLocation("GrenadeSocket");
 		FRotator GrenadeRotation = Camera->GetComponentRotation();
-		GrenadeRotation.Pitch = GrenadeRotation.Pitch + 10;
+		GrenadeRotation.Pitch = GrenadeRotation.Pitch + 10; //Adjust Pitch
 
 		/*Spawn Projectile*/
 		AOR_LauncherProjectile* Launcher = GetWorld()->SpawnActor<AOR_LauncherProjectile>(LauncherClass, GrenadeLocation, GrenadeRotation);
@@ -493,54 +526,24 @@ void AMainCharacter::EndGrenadeLauncher() //Call By Anim Notify
 }
 
 
-/////////////////////////Star/ End SwitchWeapon ///////////////////
-void AMainCharacter::StarSwtichWeapon()
-{
-	if (GetCombatStatus() == ECombatStatus::ECS_Grenade  || GetCombatStatus() == ECombatStatus::ECS_Melee || GetCombatStatus() == ECombatStatus::ECS_Reload)
-	{
-		bIsReload = false;
-		bIsGrenadeLauncher = false;
-	    bIsMeleeAttack = false;
-		StopMyMontage(0.1);
-	}
-	if (GetCombatStatus() == ECombatStatus::ECS_FireUnder || GetCombatStatus() == ECombatStatus::ECS_PointedFire)
-	{
-		EndShootByOther();
-	}
-	bIsSwitching = true;
-	UpdatePlayerProperties();
-}
+////////////////////////////////////////////////////////////////////
+//
+//   Character Ultimates Functions
+//
+////////////////////////////////////////////////////////////////////
 
-void AMainCharacter::EndSwitchWeapom()
-{
-	bIsSwitching = false;
-	if (GetCurrentWeaponStatus() == ECurrentWeapon::ECW_Rifle)
-	{
-		Rocket->SetVisibility(true);
-		Weapon->SetVisibility(false);
-		SetCurrentWeaponStatus(ECurrentWeapon::ECW_Rocket);
-	}
-	else
-	{
-		Rocket->SetVisibility(false);
-		Weapon->SetVisibility(true);
-		SetCurrentWeaponStatus(ECurrentWeapon::ECW_Rifle);
-	}
-	UpdatePlayerProperties();
-}
-
-
-///////////////////////// Ultimate ///////////////////
 void AMainCharacter::ActivateCurrentUltimate()
 {
 	if (!bIsJumping && !bIsUltimate)
 	{
 		BP_StarAttackUltimate();
 		bIsUltimate = true;
-		GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::StarAttackUltimate, 0.5f, false, 0.5f);
+		GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::StarAttackUltimate, 0.5f, false, 0.5f); // Timer to reproduce preview Animation Current Ultimate 
+		                                                                                                                             //and then active ultimate
 	}
 	
 }
+/////////////////////////Attack Ultimate ///////////////////
 void AMainCharacter::StarAttackUltimate()
 {
 	GetWorldTimerManager().ClearTimer(AttackUltimateHandle);
@@ -560,7 +563,6 @@ void AMainCharacter::EndAttackUltimate()
 }
 
 
-
 ///////////////////////// One Heatl Change Delegate ///////////////////
 void AMainCharacter::OnHealthChange(UOR_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
@@ -576,6 +578,128 @@ void AMainCharacter::OnHealthChange(UOR_HealthComponent* CurrentHealthComponent,
 	}
 }
 
+////////////////////////////////////////////////////////////////////
+//
+//  Shots Function
+//
+////////////////////////////////////////////////////////////////////
+
+/////////////////////////Normal Weapon Shoot Function ///////////////////
+void AMainCharacter::Shoot()
+{
+	if (WeaponAmmo <= 0)
+	{
+		EndShootByOther();
+		StarReload();
+		return;
+	}
+
+	if (IsValid(BulletClass))
+	{
+		if (IsValid(MuzzleShoot1) && IsValid(MuzzleShoot2) && IsValid(ShellEject) && IsValid(SmokeMuzzle) && IsValid(SmokeShell))
+		{
+			if (GetMovementStatus() == EMovementStatus::EMS_Pointing)
+			{
+				/*Play Random Section*/
+				int32 Section = FMath::RandRange(1, 2);
+				switch (Section)
+				{
+				case 1:
+					PlayMyMontage(PointedShoot_Montage, 2.0F, FName("PShoot01"));
+					break;
+				case 2:
+					PlayMyMontage(PointedShoot_Montage, 2.0F, FName("PShoot02"));
+					break;
+				default:
+					break;
+				}
+
+				/*Get Socket Transforms*/
+				FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
+				FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
+				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 4.f; //Adjust Socket Rotation for pointed
+
+				/*Spawn Projectile*/
+				AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(BulletClass, MuzzleLocation, MuzzleRotation);
+				Projectile->SetMain(this); // Set This to Projectile
+
+				/** Spawn Emitters */
+				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot1, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.3f));
+				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot2, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.15f));
+				UGameplayStatics::SpawnEmitterAttached(SmokeMuzzle, Weapon, FName("Muzzle"), FVector(ForceInitToZero), GetActorLocation().ToOrientationRotator(), FVector(0.02f, 0.02f, 0.15f));
+				UGameplayStatics::SpawnEmitterAttached(SmokeShell, Weapon, FName("Smoke"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.2f, 0.6f, 0.6f));
+				UGameplayStatics::SpawnEmitterAttached(ShellEject, Weapon, FName("Shell"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
+			}
+			else
+			{
+				/*Play Random Section*/
+				int32 Section = FMath::RandRange(1, 2);
+				switch (Section)
+				{
+				case 1:
+					PlayMyMontage(ShootMontage, 2.0f, FName("Shoot01"));
+					break;
+				case 2:
+					PlayMyMontage(ShootMontage, 2.0f, FName("Shoot02"));
+					break;
+				default:
+					break;
+				}
+
+				/*Get Socket Transforms*/
+				FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
+				FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
+				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 2.5f; //Adjust Socket Rotation for Fire Under
+				MuzzleRotation.Yaw = MuzzleRotation.Yaw + 2;//Adjust Socket Rotation Fire Under
+
+
+				/*Spawn Projectile*/
+				AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(BulletClass, MuzzleLocation, MuzzleRotation);
+				Projectile->SetMain(this); // Set This to Projectile
+
+
+
+
+				/** Spawn Emitters */
+				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot1, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
+				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot2, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.3f));
+				UGameplayStatics::SpawnEmitterAttached(SmokeMuzzle, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.02f, 1.5f, 0.15f));
+				UGameplayStatics::SpawnEmitterAttached(SmokeShell, Weapon, FName("Smoke"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.15f, 0.2f, 0.7f));
+				UGameplayStatics::SpawnEmitterAttached(ShellEject, Weapon, FName("Shell"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
+			}
+		}
+		WeaponAmmo--;
+	}
+}
+
+/////////////////////////Rocket Shoot Function ///////////////////
+void AMainCharacter::RocketShoot()
+{
+	if (IsValid(RocketClass) && IsValid(Weapon) && IsValid(FinalGun))
+	{
+		/*Get Socket Transforms*/
+		FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
+		FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
+		MuzzleRotation.Pitch = MuzzleRotation.Pitch - 4.f; //	Adjust Projectiel Direction
+
+		/*Spawn Projectile*/
+		AOR_RocketProjectile* MyRocket = GetWorld()->SpawnActor<AOR_RocketProjectile>(RocketClass, MuzzleLocation, MuzzleRotation);
+		MyRocket->SetMain(this);
+		RocketAmmo--;
+		/*Check State*/
+		if (GetMovementStatus() != EMovementStatus::EMS_Pointing)
+		{
+			PlayMyMontage(ShootMontage, 1.0f, FName("Shoot01"));
+			UGameplayStatics::SpawnEmitterAttached(FinalGun, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(2.0f));
+		}
+		/*Check Ammo and State*/
+		if (RocketAmmo == 0 && bIsAttackUltimate)
+		{
+			EndAttackUltimate();
+		}
+
+	}
+}
 
 
 ////////////////////////////////////////////////////////////////////
@@ -645,7 +769,7 @@ void AMainCharacter::Tick(float DeltaTime)
 
 ////////////////////////////////////////////////////////////////////
 //
-//   Character Update Propertys and BP Functions
+//   Character Update Propertys and BP Camera Functions
 //
 ////////////////////////////////////////////////////////////////////
 // UpdatePlayerPropertys // Status-Camera
@@ -709,7 +833,7 @@ void AMainCharacter::UpdatePlayerProperties()
 	}
 
 	
-	              /////////////Camera Movement//////////////
+	              /////////////Camera Movements//////////////
 
 	//Activa/Deactive -> Camera Shoot Under
 	if (GetCombatStatus() == ECombatStatus::ECS_FireUnder)
@@ -900,128 +1024,6 @@ void AMainCharacter::StopMyMontage(float RatioStop)
 	{
 		MainAnimInstance->StopAllMontages(RatioStop);
 	}
-}
-
-
-
-////////////////////////////////////////////////////////////////////
-//
-//  ShotS Function
-//
-////////////////////////////////////////////////////////////////////
-void AMainCharacter::Shoot()
-{
-	if (WeaponAmmo <= 0) 
-	{
-		EndShootByOther();
-		StarReload();
-		return;
-	}
-
-	if (IsValid(BulletClass))
-	{
-		if (IsValid(MuzzleShoot1) && IsValid(MuzzleShoot2) && IsValid(ShellEject) && IsValid(SmokeMuzzle) && IsValid(SmokeShell))
-		{
-			if (GetMovementStatus() == EMovementStatus::EMS_Pointing)
-			{
-				/*Play Random Section*/
-				int32 Section = FMath::RandRange(1, 2);
-				switch (Section)
-				{
-				case 1:
-					PlayMyMontage(PointedShoot_Montage, 2.0F, FName("PShoot01"));
-					break;
-				case 2:
-					PlayMyMontage(PointedShoot_Montage, 2.0F, FName("PShoot02"));
-					break;
-				default:
-					break;
-				}
-
-				/*Get Socket Transforms*/
-				FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
-				FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
-				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 4.f; //Adjust Socket Rotation for pointed
-
-				/*Spawn Projectile*/
-				AProjectile* Projectile= GetWorld()->SpawnActor<AProjectile>(BulletClass, MuzzleLocation, MuzzleRotation);
-				Projectile->SetMain(this); // Set This to Projectile
-		
-				/** Spawn Emitters */
-				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot1, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.3f));
-				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot2, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.15f));
-				UGameplayStatics::SpawnEmitterAttached(SmokeMuzzle, Weapon, FName("Muzzle"), FVector(ForceInitToZero), GetActorLocation().ToOrientationRotator(), FVector(0.02f, 0.02f, 0.15f));
-				UGameplayStatics::SpawnEmitterAttached(SmokeShell, Weapon, FName("Smoke"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.2f, 0.6f, 0.6f));
-				UGameplayStatics::SpawnEmitterAttached(ShellEject, Weapon, FName("Shell"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
-			}
-			else 
-			{
-				/*Play Random Section*/
-				int32 Section = FMath::RandRange(1, 2);
-				switch (Section)
-				{
-				case 1:
-					PlayMyMontage(ShootMontage, 2.0f, FName("Shoot01"));
-					break;
-				case 2:
-					PlayMyMontage(ShootMontage, 2.0f, FName("Shoot02"));
-					break;
-				default:
-					break;
-				}
-
-				/*Get Socket Transforms*/
-				FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
-				FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
-				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 2.5f; //Adjust Socket Rotation for Fire Under
-				MuzzleRotation.Yaw = MuzzleRotation.Yaw + 2;//Adjust Socket Rotation Fire Under
-				
-			
-				/*Spawn Projectile*/
-				AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(BulletClass, MuzzleLocation, MuzzleRotation);
-				Projectile->SetMain(this); // Set This to Projectile
-
-
-	
-
-				/** Spawn Emitters */
-				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot1, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
-				UGameplayStatics::SpawnEmitterAttached(MuzzleShoot2, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.3f));
-				UGameplayStatics::SpawnEmitterAttached(SmokeMuzzle, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.02f, 1.5f, 0.15f)); 
-				UGameplayStatics::SpawnEmitterAttached(SmokeShell, Weapon, FName("Smoke"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.15f, 0.2f, 0.7f));
-				UGameplayStatics::SpawnEmitterAttached(ShellEject, Weapon, FName("Shell"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(0.6f));
-			}
-		}
-		WeaponAmmo--;
-	}
-}
-
-void AMainCharacter::RocketShoot()
-{
-	if (IsValid(RocketClass) && IsValid(Weapon) && IsValid(FinalGun))
-	{
-		/*Get Socket Transforms*/
-		FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
-		FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
-		MuzzleRotation.Pitch = MuzzleRotation.Pitch - 4.f; //	Adjust Projectiel Direction
-
-		/*Spawn Projectile*/
-		AOR_RocketProjectile* MyRocket = GetWorld()->SpawnActor<AOR_RocketProjectile>(RocketClass, MuzzleLocation, MuzzleRotation);
-		MyRocket->SetMain(this);
-		RocketAmmo--;
-		/*Check State*/
-		if (GetMovementStatus()!= EMovementStatus::EMS_Pointing)
-		{
-			PlayMyMontage(ShootMontage, 1.0f, FName("Shoot01"));
-			UGameplayStatics::SpawnEmitterAttached(FinalGun, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(2.0f));
-		}
-		/*Check Ammo and State*/
-		if (RocketAmmo == 0 && bIsAttackUltimate)
-		{
-			EndAttackUltimate();
-		}
-		
-	}	
 }
 
 
