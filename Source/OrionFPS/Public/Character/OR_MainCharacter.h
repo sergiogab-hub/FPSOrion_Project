@@ -575,6 +575,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_Ultimates")
 		void BP_ShootRocket();
 
+	             /////////////Death State BP Functions /////////////////
+
+	/**Deast*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_Ultimates")
+		void BP_Death();
+
 
 
 

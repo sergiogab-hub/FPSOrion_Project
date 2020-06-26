@@ -569,6 +569,7 @@ void AMainCharacter::OnHealthChange(UOR_HealthComponent* CurrentHealthComponent,
 		if (IsValid(GameModeReference))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Ta morto xD"));
+			BP_Death();
 			GameModeReference->GameOver(this);
 		}
 		
