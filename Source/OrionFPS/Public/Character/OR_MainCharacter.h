@@ -107,33 +107,33 @@ private:
 
 
 	/**  Jump Space Bar input */
-	void StarJump();
+	void StartJump();
 	void EndJump();
 
 	/**  Sprint Left Shift Input */
-	void StarSprint();
+	void StartSprint();
 	void StopSprint();
 
 	/**  Pointed Weapon Right Mouse Input */
-	void StarGunPoint();
+	void StartGunPoint();
 	void EndGunPoint();
 
 	/**  Shoot Left Mouse Input */
-	void StarShoot();
+	void StartShoot();
 	void EndShoot();
 	void EndShootByOther();
 
 	/**  Star Reload Left Mouse */
-	void StarReload(); //EndReload() -> BP Function
+	void StartReload(); //EndReload() -> BP Function
 	
 	/**  Star Melee Attack */
-	void StarMeleeAtaack(); //EndMeleeAttack() -> BP Function
+	void StartMeleeAtaack(); //EndMeleeAttack() -> BP Function
 	
 	/**  Star Grenade Launcher */
-	void StarGrenadeLauncher(); //EndGrenadeLauncher() -> BP Function
+	void StartGrenadeLauncher(); //EndGrenadeLauncher() -> BP Function
 	
 	/**  Star Switch Weapon */
-	void StarSwtichWeapon(); //EndSwitch() -> BP Function
+	void StartSwitchWeapon(); //EndSwitch() -> BP Function
 	
 	/**  Activate Current Ultimate */
 	void ActivateCurrentUltimate();
@@ -298,6 +298,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		float RotationSpeed;
 
+	/** Normal MaxWalkSpeed*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		float NormalMaxWalkSpeed;
+
+	/** Sprint MaxWalkSpeed*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		float SprintMaxWalkSpeed;
+
+	/** Initial MaxWalkSpeed*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		float UltimateMovilityMaxWalkSpeed;
+
 	/** Control Variable Run State*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		bool bIsRuning;
@@ -412,6 +424,26 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 	   int32 RocketAmmo;
 
+	/** AdrenalinaSpeed */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float MaxAdrenalinaSpeed;
+
+	/** AdrenalinaSpeed */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float AdrenalinaSpeed;
+
+	/** AdrenalinaSpeed */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float DeltaAdrenalinaSpeed;
+
+	/** AdrenalinaSpeed */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float AdrenalinaSpeedDrainRate;
+
+	/** Player Rate Anim */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float PlayerRate;
+
 	/** Is ultimate Active */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bIsAttackUltimate;
@@ -485,6 +517,8 @@ public:
 	FORCEINLINE bool HasToDestroy() const { return bHastoDestroy; }
 
 	FORCEINLINE UOR_HealthComponent* GetHealthComponent() { return Health;}
+
+	FORCEINLINE float GetPlayerRate() const { return PlayerRate; }
 
 	void SetEnumMeleeCollision(ECollisionEnabled::Type CollisionState);
 
@@ -570,17 +604,25 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEvents")
 		void SetScoopVisibility(bool Visibilty);
 
-	/**Star Attack Camera Logic*/
+	/**Start Attack Camera Logic*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEvents")
 		void BP_StarAttackUltimate();
 
-	/**Star Attack Camera Logic*/
+	/**End Attack Camera Logic*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEventss")
 		void BP_EndAttackUltimate();
 
 	/**ShootRocketCameraLogic*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEvents")
 		void BP_ShootRocket();
+
+	/**Start Movility Camera Logic*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEvents")
+		void BP_StartMovilityUltimate();
+
+	/**End MovilitCamera Logic*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEventss")
+		void BP_EndMovilityUltimate();
 
 
 	             /////////////Death State BP Functions /////////////////
@@ -644,17 +686,25 @@ public:
 
 	////////////Ultimates Functions ////////////////////////////////
 
+	/***Star Attack Ultimate Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+		void  StartAttackUltimate();
+
 	/** Shoot Rocket Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void RocketShoot();
 
-	/***Star Attack Ultimate Function*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
-		void  StarAttackUltimate();
-
 	/***End Attack Ultimate Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
 		void  EndAttackUltimate();
+
+	/***Star Movility Ultimate Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+		void  StartMovilityUltimate();
+
+	/***End Movility Ultimate Function*/
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+		void  EndMovilityUltimate();
 
 	    /** Shoot FTimerHablde */
 	     FTimerHandle AttackUltimateHandle;

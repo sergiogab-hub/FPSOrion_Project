@@ -52,6 +52,7 @@ void UMainAnimInstance::UpdateAnimationPropertys()
 		if (Main == nullptr)
 		{
 			Main = Cast<AMainCharacter>(Pawn);
+
 		}
 
 		//Get Speed / SpeedZ
@@ -59,6 +60,7 @@ void UMainAnimInstance::UpdateAnimationPropertys()
 		////////FVector LateralSpeed = FVector(Speed.X, Speed.Y, 0.f); /////Debug
 		MovementSpeed = Speed.Size();
 
+		CharacterPlayerRate = Main->GetPlayerRate();
 
 		//// Jump Logics//////
 		VelocityZ = Speed.Z;

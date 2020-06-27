@@ -72,16 +72,19 @@ AMainCharacter::AMainCharacter()
 
 	// State Movement Variables
 	RotationSpeed = 50.0f;
+	NormalMaxWalkSpeed = 350.0f;
+	SprintMaxWalkSpeed = 700.0F;
 	bIsRuning = false;
 	bIsMoving = false;
 	bIsPointed = false;
 	bIsJumping = false;
 	bIsReload = false;
 	bIsSwitching = false;
+
 	
 
 	//Set Default Current Velocity
-	CurrentVelocity = 0.f;
+	CurrentVelocity = 0.0f;
 
 
 	// Open/Close Variables
@@ -110,6 +113,11 @@ AMainCharacter::AMainCharacter()
 	//Ultimate Varaibles
 	bIsUltimate = false;
 	RocketAmmo = 5;
+	PlayerRate = 1.0f;
+	MaxAdrenalinaSpeed = 100.0f;
+	AdrenalinaSpeed = 0.0f;
+	AdrenalinaSpeedDrainRate = 10.0f;
+	UltimateMovilityMaxWalkSpeed = 1100.0f;
 	bIsAttackUltimate = false;
 	bIsDefenseUltimate = false;
 	bIsMovilityUltimate = false;
@@ -134,7 +142,7 @@ void AMainCharacter::BeginPlay()
 
 	//SetRocketWeaponInitialVisibility
 	Rocket->SetVisibility(false);
-	
+
 }
 
 
@@ -192,7 +200,7 @@ void AMainCharacter::RotateYaw(float value)
 
 
 ////////Star / End - Jump Space Bar Method /////////
-void AMainCharacter::StarJump()
+void AMainCharacter::StartJump()
 {
 	if (!bIsUltimate)
 	{
@@ -207,7 +215,7 @@ void AMainCharacter::EndJump()
 }
 
 /////////// Star / End - Sprint Left Shift Method ///////
-void AMainCharacter::StarSprint()
+void AMainCharacter::StartSprint()
 {
 	/** Check Reload State */
 	if (GetCombatStatus() == ECombatStatus::ECS_Reload)
@@ -230,7 +238,7 @@ void AMainCharacter::StopSprint()
 
 
 ///////// Star / End - Gun Pointed Right Mouse Method /////////
-void AMainCharacter::StarGunPoint()
+void AMainCharacter::StartGunPoint()
 {
 	/** Check Reload State */
 	if (GetCombatStatus() == ECombatStatus::ECS_Reload)
@@ -252,7 +260,7 @@ void AMainCharacter::EndGunPoint()
 }
 
 /////////////////////////Star/ End SwitchWeapon ///////////////////
-void AMainCharacter::StarSwtichWeapon()
+void AMainCharacter::StartSwitchWeapon()
 {
 	if (GetCombatStatus() == ECombatStatus::ECS_Grenade || GetCombatStatus() == ECombatStatus::ECS_Melee || GetCombatStatus() == ECombatStatus::ECS_Reload)
 	{
@@ -295,7 +303,7 @@ void AMainCharacter::EndSwitchWeapom() // Call By Anim Notify
 ////////////////////////////////////////////////////////////////////
 
 ///////////////////// Star/End Shoot ///////////////////
-void AMainCharacter::StarShoot()
+void AMainCharacter::StartShoot()
 {
 	bIsKeyShootPressed = true;
 
@@ -316,7 +324,7 @@ void AMainCharacter::StarShoot()
 	/** Normal Shoot Check Movement Conditions */
 	if (WeaponAmmo <= 0)
 	{
-		StarReload();
+		StartReload();
 		return;
 	}
 
@@ -328,7 +336,7 @@ void AMainCharacter::StarShoot()
 	if (GetCombatStatus() == ECombatStatus::ECS_Reload)
 	{
 		bIsReload = false;
-		StopMyMontage(0.2);
+		StopMyMontage(0.2f);
 	}
 
 
@@ -359,7 +367,7 @@ void AMainCharacter::EndShootByOther()
 
 
 /////////////////////////Star/ End Reload //////////////////
-void AMainCharacter::StarReload()
+void AMainCharacter::StartReload()
 {
 	/** Check Movement Conditions */
     if (WeaponAmmo >= 50 || GetCombatStatus() == ECombatStatus::ECS_Reload || GetCombatStatus() == ECombatStatus::ECS_Grenade || bIsSwitching)
@@ -375,7 +383,7 @@ void AMainCharacter::StarReload()
 	if (GetCombatStatus() == ECombatStatus::ECS_Melee)
 	{
 		bIsMeleeAttack = false;
-		StopMyMontage(0.8);
+		StopMyMontage(0.8f);
 	}
 
 
@@ -400,12 +408,12 @@ void AMainCharacter::EndReload() //Call by Anim Notify
 	UpdatePlayerProperties();	
 
 	/** If Left Mouse Button Still Pressed Continue Shooting */
-	if (bIsKeyShootPressed) { StarShoot(); }	
+	if (bIsKeyShootPressed) { StartShoot(); }	
 }
 
 
 //////////////////////////////Star/ End MeleeAttack ///////////////////
-void AMainCharacter::StarMeleeAtaack()
+void AMainCharacter::StartMeleeAtaack()
 {
 	/** Check Movement Conditions*/
 	if (GetCombatStatus() == ECombatStatus::ECS_Melee || GetCombatStatus() == ECombatStatus::ECS_Grenade || bIsSwitching)
@@ -421,7 +429,7 @@ void AMainCharacter::StarMeleeAtaack()
 	if (GetCombatStatus() == ECombatStatus::ECS_Reload)
 	{
 		bIsReload = false;
-		StopMyMontage(0.2);
+		StopMyMontage(0.2f);
 	}
 
 	/** Set Variables / Play Montage*/
@@ -437,10 +445,10 @@ void AMainCharacter::EndMeleeAttack()
 	/** Set Variables / End Montage*/
 	bIsMeleeAttack = false;
 	UpdatePlayerProperties();
-	StopMyMontage(1.0);
+	StopMyMontage(1.0f);
 
 	/** If Left Mouse Button Still Pressed Continue Shooting */
-	if (bIsKeyShootPressed) { StarShoot(); }
+	if (bIsKeyShootPressed) { StartShoot(); }
 }
 
 void AMainCharacter::SetEnumMeleeCollision(ECollisionEnabled::Type CollisionState) //Call By Anim Notify
@@ -458,7 +466,7 @@ void AMainCharacter::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, A
 
 
 /////////////////////////Star/ End GrenadeLauncher ///////////////////
-void AMainCharacter::StarGrenadeLauncher()
+void AMainCharacter::StartGrenadeLauncher()
 {
 	/** Check Movement Conditions*/
 	if (GrenadeAmmo <= 0 || GetCombatStatus() == ECombatStatus::ECS_Grenade || bIsSwitching)
@@ -474,13 +482,13 @@ void AMainCharacter::StarGrenadeLauncher()
 	if (GetCombatStatus() == ECombatStatus::ECS_Melee)
 	{
 		bIsMeleeAttack = false;
-		StopMyMontage(0.8);
+		StopMyMontage(0.8f);
 	}
 
 	if (GetCombatStatus() == ECombatStatus::ECS_Reload)
 	{
 	    bIsReload = false;
-		StopMyMontage(0.2);
+		StopMyMontage(0.2f);
 	}
 
 	if (GetMovementStatus() == EMovementStatus::EMS_Sprinting)
@@ -518,11 +526,11 @@ void AMainCharacter::EndGrenadeLauncher() //Call By Anim Notify
 	/** Set Variables / End Montage*/
 	bIsGrenadeLauncher = false;
 	UpdatePlayerProperties();
-	StopMyMontage(0.2);
+	StopMyMontage(0.2f);
 
 
 	/** If Left Mouse Button Still Pressed Continue Shooting */
-	if (bIsKeyShootPressed) { StarShoot(); }
+	if (bIsKeyShootPressed) { StartShoot(); }
 }
 
 
@@ -534,32 +542,70 @@ void AMainCharacter::EndGrenadeLauncher() //Call By Anim Notify
 
 void AMainCharacter::ActivateCurrentUltimate()
 {
+	StartMovilityUltimate();
+	bIsUltimate = true;
+	return;
+	
 	if (!bIsJumping && !bIsUltimate)
 	{
-		BP_StarAttackUltimate();
-		bIsUltimate = true;
-		GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::StarAttackUltimate, 0.5f, false, 0.5f); // Timer to reproduce preview Animation Current Ultimate 
-		                                                                                                                             //and then active ultimate
+		BP_StarAttackUltimate(); //Call Camera Function -> the BP End is called on Tick else Jump;
+		GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::StartAttackUltimate, 0.5f, false, 0.5f); // Timer to reproduce preview Animation Current Ultimate 	                                                                                                                             //and then active ultimate
 	}
 	
 }
 /////////////////////////Attack Ultimate ///////////////////
-void AMainCharacter::StarAttackUltimate()
+void AMainCharacter::StartAttackUltimate()
 {
+	bIsAttackUltimate = true;
 	GetWorldTimerManager().ClearTimer(AttackUltimateHandle);
 	GetCharacterMovement()->JumpZVelocity = 2500;
-	GetCharacterMovement()->AirControl = 3.0;
+	GetCharacterMovement()->AirControl = 3.0f;
 	Jump();
-	StarSwtichWeapon();
-	bIsAttackUltimate = true;
+	StartSwitchWeapon();
 	GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::EndAttackUltimate, 15.0f, false, 15.0f);
 }
 void AMainCharacter::EndAttackUltimate()
 {
-	GetCharacterMovement()->GravityScale = 1.0;
 	bIsAttackUltimate = false;
+	GetCharacterMovement()->GravityScale = 1.0;
 	RocketAmmo = 5;
 	GetWorldTimerManager().ClearTimer(AttackUltimateHandle);
+}
+
+/////////////////////////Movility Ultimate ///////////////////
+void AMainCharacter::StartMovilityUltimate()
+{
+	if (GetMovementStatus() == EMovementStatus::EMS_Sprinting)
+	{
+		BP_EndCameraSprint();
+		bIsSprintCalled = false;
+	}
+	bIsMovilityUltimate = true;
+	AdrenalinaSpeed = MaxAdrenalinaSpeed;
+	PlayerRate = 1.5;
+	UpdatePlayerProperties();
+}
+
+void AMainCharacter::EndMovilityUltimate()
+{
+	bIsMovilityUltimate=false;
+	bIsUltimate = false;
+	PlayerRate = 1.0;
+
+	BP_EndMovilityUltimate();
+
+	if (GetMovementStatus() == EMovementStatus::EMS_Sprinting)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = SprintMaxWalkSpeed;
+		BP_StarCameraSprint();
+	}
+	else
+	{
+		
+		GetCharacterMovement()->MaxWalkSpeed = NormalMaxWalkSpeed;
+	}
+	
+	UpdatePlayerProperties();
 }
 
 
@@ -590,7 +636,7 @@ void AMainCharacter::Shoot()
 	if (WeaponAmmo <= 0)
 	{
 		EndShootByOther();
-		StarReload();
+		StartReload();
 		return;
 	}
 
@@ -721,15 +767,36 @@ void AMainCharacter::Tick(float DeltaTime)
 		UpdatePlayerProperties();
 	}
 
+	///// DrainRate Ultimate Movility ////  
+	if (bIsMovilityUltimate)
+	{
+		if (GetMovementStatus() == EMovementStatus::EMS_Sprinting)
+		{
+			DeltaAdrenalinaSpeed = AdrenalinaSpeedDrainRate * DeltaTime;
+			AdrenalinaSpeed = FMath::Clamp(AdrenalinaSpeed - DeltaAdrenalinaSpeed, 0.0f, MaxAdrenalinaSpeed);
+		}
+		else
+		{
+			DeltaAdrenalinaSpeed = AdrenalinaSpeedDrainRate/4 * DeltaTime;
+			AdrenalinaSpeed = FMath::Clamp(AdrenalinaSpeed - DeltaAdrenalinaSpeed, 0.0f, MaxAdrenalinaSpeed);
+		}	
 
-	///// Set Jumping Control ////  /// No Optimizado
+		if (AdrenalinaSpeed <= 0.0)
+		{
+			EndMovilityUltimate();
+		}
+	}
+
+
+
+	///// Set Jumping Control / Attack Ultimate ////  
 	if (GetVelocity().Z != 0)
 	{
 		if (!bIsJumpCalled)
 		{
 			bIsJumping = true;
 			bIsJumpCalled = true;
-			bIsDelay = true;   /// Delay Control Sprint/Jump Variable - Set by C++ and BP
+			bIsDelay = true;   
 
 			BP_StarCameraJump();
 		}
@@ -751,7 +818,7 @@ void AMainCharacter::Tick(float DeltaTime)
 				}
 				GetCharacterMovement()->JumpZVelocity = 600;
 				GetCharacterMovement()->AirControl = 0.02;
-				StarSwtichWeapon();
+				StartSwitchWeapon();
 			}
 			
 		}
@@ -881,8 +948,17 @@ void AMainCharacter::UpdatePlayerProperties()
 		{
 			bIsSprintCalled = true;
 
-			BP_StarCameraSprint();
-			GetCharacterMovement()->MaxWalkSpeed = 700;
+			if (!bIsMovilityUltimate)
+			{
+				BP_StarCameraSprint();
+				GetCharacterMovement()->MaxWalkSpeed = SprintMaxWalkSpeed;
+			}
+			else
+			{
+				BP_StartMovilityUltimate();
+				GetCharacterMovement()->MaxWalkSpeed = UltimateMovilityMaxWalkSpeed;
+			}
+			
 		}
 
 	}
@@ -892,8 +968,17 @@ void AMainCharacter::UpdatePlayerProperties()
 		{
 			bIsSprintCalled = false;
 
-			BP_EndCameraSprint();
-			GetCharacterMovement()->MaxWalkSpeed = 350;
+			if (!bIsMovilityUltimate)
+			{
+				BP_EndCameraSprint();
+				GetCharacterMovement()->MaxWalkSpeed = NormalMaxWalkSpeed;
+			}
+			else
+			{
+				BP_EndMovilityUltimate();
+				GetCharacterMovement()->MaxWalkSpeed = 700;
+			}
+			
 		}
 	}
 
@@ -1048,23 +1133,23 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAxis("Turn", this, &AMainCharacter::RotateYaw);
 
 	//Action Mappings
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AMainCharacter::StarJump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AMainCharacter::StartJump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AMainCharacter::EndJump);
 
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMainCharacter::StarSprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMainCharacter::StartSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMainCharacter::StopSprint);
 
-	PlayerInputComponent->BindAction("GunPoint", IE_Pressed, this, &AMainCharacter::StarGunPoint);
+	PlayerInputComponent->BindAction("GunPoint", IE_Pressed, this, &AMainCharacter::StartGunPoint);
 	PlayerInputComponent->BindAction("GunPoint", IE_Released, this, &AMainCharacter::EndGunPoint);
 
-	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AMainCharacter::StarShoot);
+	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AMainCharacter::StartShoot);
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AMainCharacter::EndShoot);
 
-	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AMainCharacter::StarReload);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AMainCharacter::StartReload);
 
-	PlayerInputComponent->BindAction("MeleeAttack", IE_Pressed, this, &AMainCharacter::StarMeleeAtaack);
+	PlayerInputComponent->BindAction("MeleeAttack", IE_Pressed, this, &AMainCharacter::StartMeleeAtaack);
 
-	PlayerInputComponent->BindAction("Grenade", IE_Pressed, this, &AMainCharacter::StarGrenadeLauncher);
+	PlayerInputComponent->BindAction("Grenade", IE_Pressed, this, &AMainCharacter::StartGrenadeLauncher);
 
 	PlayerInputComponent->BindAction("CurrentUltimate", IE_Pressed, this, &AMainCharacter::ActivateCurrentUltimate);
 

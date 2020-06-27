@@ -46,6 +46,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement) ///////Debug
 		float VelocityZ;
 
+	/** Current Velocity.Z  */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement) ///////Debug
+		float CharacterPlayerRate;
+
+
+
 protected:
 	////////////////////////////////////////////////////////////////////
 	//
