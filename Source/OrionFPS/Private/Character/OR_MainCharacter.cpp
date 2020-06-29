@@ -7,6 +7,7 @@
 #include "Projectiles/OR_RocketProjectile.h"
 #include "Projectiles/OR_BulletProjectile.h"
 #include "Projectiles/OR_LauncherProjectile.h"
+#include "Pilars/OR_Pilar.h"
 
 
 
@@ -118,10 +119,22 @@ AMainCharacter::AMainCharacter()
 	AdrenalinaSpeed = 0.0f;
 	AdrenalinaSpeedDrainRate = 10.0f;
 	UltimateMovilityMaxWalkSpeed = 1100.0f;
+
 	bIsAttackUltimate = false;
 	bIsDefenseUltimate = false;
 	bIsMovilityUltimate = false;
 	
+
+	bHasAttackUltimateReady = false;
+	bHasDefenceUltimateReady = false;
+	bHasMovilityUltimateReady = false;
+
+	AttackPilarRateState = 0.f;
+    DefencePilarRateState=0.f;
+	MovilityPilarRateState = 0.f;
+
+    MaxPilarsRate=20.0f;
+
 	bHastoDestroy = false;
 	
 }
@@ -542,15 +555,30 @@ void AMainCharacter::EndGrenadeLauncher() //Call By Anim Notify
 
 void AMainCharacter::ActivateCurrentUltimate()
 {
-	StartMovilityUltimate();
-	bIsUltimate = true;
-	return;
-	
-	if (!bIsJumping && !bIsUltimate)
+	if (!bHasAttackUltimateReady && !bHasDefenceUltimateReady && !bHasMovilityUltimateReady)
 	{
-		BP_StarAttackUltimate(); //Call Camera Function -> the BP End is called on Tick else Jump;
-		GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::StartAttackUltimate, 0.5f, false, 0.5f); // Timer to reproduce preview Animation Current Ultimate 	                                                                                                                             //and then active ultimate
+		return;
 	}
+	else
+	{
+		if (bHasAttackUltimateReady)
+		{
+			if (!bIsJumping && !bIsUltimate)
+			{
+				BP_StarAttackUltimate(); //Call Camera Function -> the BP End is called on Tick else Jump;
+				GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::StartAttackUltimate, 0.5f, false, 0.5f); // Timer to reproduce preview Animation Current Ultimate 	                                                                                                                             //and then active ultimate
+			}
+		}
+
+		if (bHasMovilityUltimateReady)
+		{
+			StartMovilityUltimate();
+			bIsUltimate = true;
+			return;
+		}
+
+	}
+	
 	
 }
 /////////////////////////Attack Ultimate ///////////////////
@@ -609,6 +637,7 @@ void AMainCharacter::EndMovilityUltimate()
 }
 
 
+
 ///////////////////////// One Heatl Change Delegate ///////////////////
 void AMainCharacter::OnHealthChange(UOR_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
@@ -623,6 +652,46 @@ void AMainCharacter::OnHealthChange(UOR_HealthComponent* CurrentHealthComponent,
 		
 	}
 }
+
+
+void AMainCharacter::AddAttackPilarRate()
+{
+	
+	if (AttackPilarRateState >= MaxPilarsRate)
+	{
+		bHasAttackUltimateReady = true;
+	}
+	else
+	{
+		AttackPilarRateState++;
+	}
+	
+}
+
+void AMainCharacter::AddDefencePilarRate()
+{
+	if (DefencePilarRateState >= MaxPilarsRate)
+	{
+		bHasDefenceUltimateReady = true;
+	}
+	else
+	{
+		DefencePilarRateState++;
+	}
+}
+
+void AMainCharacter::AddMovilityPilarRate()
+{
+	if (MovilityPilarRateState >= MaxPilarsRate)
+	{
+		bHasMovilityUltimateReady = true;
+	}
+	else
+	{
+		MovilityPilarRateState++;
+	}
+}
+
 
 ////////////////////////////////////////////////////////////////////
 //

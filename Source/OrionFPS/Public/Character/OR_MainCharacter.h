@@ -22,6 +22,7 @@ class UOR_HealthComponent;
 class AOR_MyGameMOde;
 
 
+
 ////// Movement Enum States //////
 UENUM(BlueprintType)
 enum class EMovementStatus :uint8
@@ -456,6 +457,35 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bIsMovilityUltimate;
 
+
+	/** Has Ultimate Ready Pilar */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		bool bHasAttackUltimateReady;
+
+	/** Has Ultimate Ready Pilar */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		bool bHasDefenceUltimateReady;
+
+	/** Has Ultimate Ready Pilar */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		bool bHasMovilityUltimateReady;
+
+	/** Pilars Attack State */
+	UPROPERTY(VisibleAnywhere ,BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float AttackPilarRateState;
+
+	/** Pilars Defense State */
+	UPROPERTY(VisibleAnywhere ,BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float DefencePilarRateState;
+
+	/** Pilars Movility State */
+	UPROPERTY(VisibleAnywhere ,BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float MovilityPilarRateState;
+
+	/** Pilars Max State */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float MaxPilarsRate;
+
 	
 
 
@@ -518,9 +548,18 @@ public:
 
 	FORCEINLINE UOR_HealthComponent* GetHealthComponent() { return Health;}
 
+
 	FORCEINLINE float GetPlayerRate() const { return PlayerRate; }
 
 	void SetEnumMeleeCollision(ECollisionEnabled::Type CollisionState);
+
+	//FORCEINLINE bool GetHasUltimateReady() const { return bHasUltimateReady; }
+
+	FORCEINLINE bool GetHasAttackUltimateReady() const { return bHasAttackUltimateReady; }
+
+	FORCEINLINE bool GetHasDefenceUltimateReady() const { return bHasDefenceUltimateReady; }
+
+	FORCEINLINE bool GetHasMovilityUltimateReady() const { return bHasMovilityUltimateReady; }
 
 public:
 	////////////////////////////////////////////////////////////////////
@@ -687,27 +726,43 @@ public:
 	////////////Ultimates Functions ////////////////////////////////
 
 	/***Star Attack Ultimate Function*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
 		void  StartAttackUltimate();
 
 	/** Shoot Rocket Function*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
 		void RocketShoot();
 
 	/***End Attack Ultimate Function*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
 		void  EndAttackUltimate();
 
 	/***Star Movility Ultimate Function*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
 		void  StartMovilityUltimate();
 
 	/***End Movility Ultimate Function*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterCombat")
+	UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
 		void  EndMovilityUltimate();
 
 	    /** Shoot FTimerHablde */
 	     FTimerHandle AttackUltimateHandle;
+
+	 /***Add Attack Pilar*/
+     UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
+		 void  AddAttackPilarRate();
+
+	 /***Add Defence Pilar*/
+	 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
+		void  AddDefencePilarRate();
+
+	 /***Add Movility Pilar*/
+	 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
+		void  AddMovilityPilarRate();
+
+
+
+
 
 
 	 ////////////////// Delegate Component ///////////////////////
