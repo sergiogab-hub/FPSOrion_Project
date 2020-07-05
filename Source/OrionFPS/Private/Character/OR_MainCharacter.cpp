@@ -702,25 +702,25 @@ void AMainCharacter::UltimateCountingDuration()
 {
 	if (bIsAttackUltimate)
 	{
-		if (AttackCurrentDuration-DrainRateUltimate == 0)
+		if (AttackCurrentDuration-DrainRateUltimate <= 0)
 		{
-			AttackCurrentDuration--;
+			AttackCurrentDuration = 0;
 			EndAttackUltimate();
 			GetWorldTimerManager().ClearTimer(UltimateDurationHandle);
 			return;
 		}
 		else
 		{
-			AttackCurrentDuration-= DrainRateUltimate;
+			AttackCurrentDuration -= DrainRateUltimate;
 			return;
 		}
 		
 	}
 	if (bIsMovilityUltimate)
 	{
-		if (MovilityCurrentDuration- DrainRateUltimate == 0)
+		if (MovilityCurrentDuration- DrainRateUltimate <= 0)
 		{
-			MovilityCurrentDuration-= DrainRateUltimate;
+			MovilityCurrentDuration = 0;
 			EndMovilityUltimate();
 			GetWorldTimerManager().ClearTimer(UltimateDurationHandle);
 			return;
@@ -735,7 +735,7 @@ void AMainCharacter::UltimateCountingDuration()
 	{
 		if (DefenceCurrentDuration - DrainRateUltimate <= 0)
 		{
-			DefenceCurrentDuration-= DrainRateUltimate;
+			DefenceCurrentDuration = 0;
 			EndDefenceUltimate();
 			GetWorldTimerManager().ClearTimer(UltimateDurationHandle);
 		}
