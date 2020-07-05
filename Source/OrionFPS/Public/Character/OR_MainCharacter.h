@@ -20,6 +20,7 @@ class AOR_LauncherProjectile;
 class AOR_RocketProjectile;
 class UOR_HealthComponent;
 class AOR_MyGameMOde;
+class AOR_BasePilar;
 
 
 
@@ -126,21 +127,21 @@ private:
 
 	/**  Star Reload Left Mouse */
 	void StartReload(); //EndReload() -> BP Function
-	
+
 	/**  Star Melee Attack */
 	void StartMeleeAtaack(); //EndMeleeAttack() -> BP Function
-	
+
 	/**  Star Grenade Launcher */
 	void StartGrenadeLauncher(); //EndGrenadeLauncher() -> BP Function
-	
+
 	/**  Star Switch Weapon */
 	void StartSwitchWeapon(); //EndSwitch() -> BP Function
-	
+
 	/**  Activate Current Ultimate */
 	void ActivateCurrentUltimate();
 
 	/** BeginPlay Call Function to Set Player Object/Class References */
-    void SetupMainReferences();
+	void SetupMainReferences();
 
 
 
@@ -182,10 +183,10 @@ protected:
 		UCapsuleComponent* MeleeDetector;
 
 
-	                  //////// Character Propertys///////
+	//////// Character Propertys///////
 
 
-	/** Main Camera RelativeRotationVariable*/
+/** Main Camera RelativeRotationVariable*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterProperty")
 		FRotator CameraRotationWithPawn;
 
@@ -198,24 +199,26 @@ protected:
 		FName MeleeCapsuleSocketName;
 
 
-	                  ///////////  References ///////////
+	///////////  References ///////////
 
-	/** Game Mode Reference*/
+/** Game Mode Reference*/
 	UPROPERTY(BlueprintReadOnly, Category = "Main|References")
 		AOR_MyGameMOde* GameModeReference;
 
 	/** Anim Instance */
 	UPROPERTY(BlueprintReadOnly, Category = "Main|References")
-			UAnimInstance* MainAnimInstance;
+		UAnimInstance* MainAnimInstance;
 
 
 
-	                  ///////////  Montages ///////////
 
 
-	/** Under Shoot Montage*/
+	///////////  Montages ///////////
+
+
+/** Under Shoot Montage*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montages")
-	    UAnimMontage* ShootMontage;
+		UAnimMontage* ShootMontage;
 
 	/** Pointed Shoot Montage */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|Montages")
@@ -236,9 +239,9 @@ protected:
 
 
 
-	                   /////////// Particle System ///////////
+	/////////// Particle System ///////////
 
-	/** Muzzle Particle System */
+/** Muzzle Particle System */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|ParticleSystem")
 		UParticleSystem* MuzzleShoot1;
 
@@ -267,9 +270,9 @@ protected:
 		UParticleSystem* FinalGun;
 
 
-	                      ///////// Projectile Class /////////
+	///////// Projectile Class /////////
 
-	/** Projectile class to spawn */
+/** Projectile class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category = "Main|Projectiles")
 		TSubclassOf<AProjectile> BulletClass;
 
@@ -282,6 +285,10 @@ protected:
 		TSubclassOf<AOR_RocketProjectile> RocketClass;
 
 
+	/** Projectile Rocket to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = "Main|Pilars")
+		TSubclassOf<AOR_BasePilar> MyPilarsReference;
+
 
 protected:
 	////////////////////////////////////////////////////////////////////
@@ -291,11 +298,11 @@ protected:
 	////////////////////////////////////////////////////////////////////
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main")
-	    bool bHastoDestroy;
+		bool bHastoDestroy;
 
-		  ////////////////Movement Character Variables//////////////
+	////////////////Movement Character Variables//////////////
 
-	/** Rotation Turn Speed Pitch/Yaw*/
+/** Rotation Turn Speed Pitch/Yaw*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		float RotationSpeed;
 
@@ -360,9 +367,9 @@ protected:
 		int32 Count = 0;
 
 
-	           ////////////////////Combat Character/////////////////////
+	////////////////////Combat Character/////////////////////
 
-	/** Control Variable Reload State*/
+/** Control Variable Reload State*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		bool bIsReload;
 
@@ -408,38 +415,35 @@ protected:
 
 	/** CountAmmo*/
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
-	    int32 WeaponAmmo;
+		int32 WeaponAmmo;
 
 	/** CountAmmo*/
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		int32 GrenadeAmmo;
 
 
-	       ////////////////////Ultimate Character/////////////////////
+	////////////////////Ultimate Character/////////////////////
 
-	/** Is ultimate Active */
+/** Is ultimate Active */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bIsUltimate;
 
 	/** Rockry AmmoCount */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-	   int32 RocketAmmo;
+		int32 RocketAmmo;
 
-	/** AdrenalinaSpeed */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		float MaxAdrenalinaSpeed;
+	/** Attack Ultimate */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float AttackUltiMaxDuration;
 
-	/** AdrenalinaSpeed */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		float AdrenalinaSpeed;
+	/** Defence Ultimate */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float DefenceUltiMaxDuration;
 
-	/** AdrenalinaSpeed */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		float DeltaAdrenalinaSpeed;
+	/** Movility Ultimate */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float MovilityUltiMaxDuration;
 
-	/** AdrenalinaSpeed */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		float AdrenalinaSpeedDrainRate;
 
 	/** Player Rate Anim */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
@@ -451,7 +455,7 @@ protected:
 
 	/** Is ultimate Active */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		bool bIsDefenseUltimate;
+		bool bIsDefenceUltimate;
 
 	/** Is ultimate Active */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
@@ -459,32 +463,60 @@ protected:
 
 
 	/** Has Ultimate Ready Pilar */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bHasAttackUltimateReady;
 
 	/** Has Ultimate Ready Pilar */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bHasDefenceUltimateReady;
 
 	/** Has Ultimate Ready Pilar */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bHasMovilityUltimateReady;
 
-	/** Pilars Attack State */
-	UPROPERTY(VisibleAnywhere ,BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		float AttackPilarRateState;
 
-	/** Pilars Defense State */
-	UPROPERTY(VisibleAnywhere ,BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		float DefencePilarRateState;
+	/** Attack Ultimate Percent */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float PilarAttackPercent;
 
-	/** Pilars Movility State */
-	UPROPERTY(VisibleAnywhere ,BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		float MovilityPilarRateState;
+	/** DefenceUltimate Percent */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float PilarDefencePercent;
+
+	/** Movility UltimatePercent */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float PilarMovilityPercent;
+
+
+	/** AttackUltimateDuration */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float AttackCurrentDuration;
 
 	/** Pilars Max State */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		float MaxPilarsRate;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float MovilityCurrentDuration;
+
+	/** Pilars Max State */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float DefenceCurrentDuration;
+
+
+	/** Pilar Attack Control Overlap */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		bool bIsOnPilarAttack;
+
+	/** Pilar Defence Control Overlap */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		bool bIsOnPilarDefence;
+
+	/** Pilar Movility Control Overlap */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		bool bIsOnPilarMovility;
+
+
+
+
+
 
 	
 
@@ -553,13 +585,52 @@ public:
 
 	void SetEnumMeleeCollision(ECollisionEnabled::Type CollisionState);
 
-	//FORCEINLINE bool GetHasUltimateReady() const { return bHasUltimateReady; }
+
+
+
+
+
+	FORCEINLINE void SetPilarAttackPercent(float Percent)  { PilarAttackPercent=Percent; }
+
+	FORCEINLINE void SetPilarDefencePercent(float Percent) { PilarDefencePercent = Percent; }
+
+	FORCEINLINE void SetPilarMovilityPercent(float Percent) { PilarMovilityPercent = Percent; }
+
+
+
+	FORCEINLINE bool GetIsAttackUltimate() const { return bIsAttackUltimate; }
+
+	FORCEINLINE bool GetIsDefenceUltimate() const { return bIsDefenceUltimate; }
+
+	FORCEINLINE bool GetIsMovilityUltimate() const { return bIsMovilityUltimate; }
+
 
 	FORCEINLINE bool GetHasAttackUltimateReady() const { return bHasAttackUltimateReady; }
 
 	FORCEINLINE bool GetHasDefenceUltimateReady() const { return bHasDefenceUltimateReady; }
 
 	FORCEINLINE bool GetHasMovilityUltimateReady() const { return bHasMovilityUltimateReady; }
+
+	FORCEINLINE void SetHasAttackUltimateReady(bool MyBool)  { bHasAttackUltimateReady=MyBool; }
+
+	FORCEINLINE void SetHasDefenceUltimateReady(bool MyBool)  { bHasDefenceUltimateReady=MyBool; }
+
+	FORCEINLINE void SetHasMovilityUltimateReady(bool MyBool)  { bHasMovilityUltimateReady=MyBool; }
+
+
+
+	FORCEINLINE void SetIsOnPilarAttack(bool MyBool)  { bIsOnPilarAttack = MyBool; }
+
+	FORCEINLINE void SetIsOnPilarDefence(bool MyBool) { bIsOnPilarDefence = MyBool; }
+
+	FORCEINLINE void SetIsOnPilarMovility(bool MyBool) { bIsOnPilarMovility = MyBool; }
+
+	FORCEINLINE bool GetIsOnPilarAttack() const { return bIsOnPilarAttack;}
+
+	FORCEINLINE bool GetIsOnPilarDefence() const { return bIsOnPilarDefence;}
+
+	FORCEINLINE bool GetIsOnPilarMovility() const{ return bIsOnPilarMovility;}
+
 
 public:
 	////////////////////////////////////////////////////////////////////
@@ -748,18 +819,21 @@ public:
 	    /** Shoot FTimerHablde */
 	     FTimerHandle AttackUltimateHandle;
 
-	 /***Add Attack Pilar*/
-     UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
-		 void  AddAttackPilarRate();
 
-	 /***Add Defence Pilar*/
+	 /***UltimateDuration*/
 	 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
-		void  AddDefencePilarRate();
+		 void  UltimateCountingDuration();
+    
+	   /** Shoot FTimerHablde */
+	     FTimerHandle UltimateDurationHandle;
 
-	 /***Add Movility Pilar*/
-	 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
-		void  AddMovilityPilarRate();
+	 /***EndDefenceUltimate*/
+		 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
+			 void EndDefenceUltimate();
 
+	 /***StartDefenceUltimate*/
+		 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
+			 void StartDefenceUltimate();
 
 
 

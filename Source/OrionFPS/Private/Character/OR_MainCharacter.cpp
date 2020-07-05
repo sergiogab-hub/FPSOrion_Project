@@ -7,7 +7,7 @@
 #include "Projectiles/OR_RocketProjectile.h"
 #include "Projectiles/OR_BulletProjectile.h"
 #include "Projectiles/OR_LauncherProjectile.h"
-#include "Pilars/OR_Pilar.h"
+#include "Pilars/OR_BasePilar.h"
 
 
 
@@ -115,13 +115,15 @@ AMainCharacter::AMainCharacter()
 	bIsUltimate = false;
 	RocketAmmo = 5;
 	PlayerRate = 1.0f;
-	MaxAdrenalinaSpeed = 100.0f;
-	AdrenalinaSpeed = 0.0f;
-	AdrenalinaSpeedDrainRate = 10.0f;
+
+	AttackUltiMaxDuration = 20.0f;
+	MovilityUltiMaxDuration = 20.0f;
+	DefenceUltiMaxDuration = 20.0f;
+
 	UltimateMovilityMaxWalkSpeed = 1100.0f;
 
 	bIsAttackUltimate = false;
-	bIsDefenseUltimate = false;
+	bIsDefenceUltimate = false;
 	bIsMovilityUltimate = false;
 	
 
@@ -129,11 +131,16 @@ AMainCharacter::AMainCharacter()
 	bHasDefenceUltimateReady = false;
 	bHasMovilityUltimateReady = false;
 
-	AttackPilarRateState = 0.f;
-    DefencePilarRateState=0.f;
-	MovilityPilarRateState = 0.f;
 
-    MaxPilarsRate=20.0f;
+
+	AttackCurrentDuration = 0.f;
+	MovilityCurrentDuration = 0.f;
+	DefenceCurrentDuration = 0.f;
+
+	bIsOnPilarAttack = false;
+	bIsOnPilarDefence = false;
+	bIsOnPilarMovility = false;
+
 
 	bHastoDestroy = false;
 	
@@ -555,7 +562,7 @@ void AMainCharacter::EndGrenadeLauncher() //Call By Anim Notify
 
 void AMainCharacter::ActivateCurrentUltimate()
 {
-	if (!bHasAttackUltimateReady && !bHasDefenceUltimateReady && !bHasMovilityUltimateReady)
+	if (!bHasAttackUltimateReady && !bHasDefenceUltimateReady && !bHasMovilityUltimateReady ||  bIsUltimate)
 	{
 		return;
 	}
@@ -563,18 +570,47 @@ void AMainCharacter::ActivateCurrentUltimate()
 	{
 		if (bHasAttackUltimateReady)
 		{
-			if (!bIsJumping && !bIsUltimate)
+			if (!bIsJumping)
 			{
+				bIsUltimate = true;
+				bIsAttackUltimate = true;
+				bHasAttackUltimateReady = false;
+				AttackCurrentDuration = AttackUltiMaxDuration;
+
 				BP_StarAttackUltimate(); //Call Camera Function -> the BP End is called on Tick else Jump;
-				GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::StartAttackUltimate, 0.5f, false, 0.5f); // Timer to reproduce preview Animation Current Ultimate 	                                                                                                                             //and then active ultimate
+
+				GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::StartAttackUltimate, 0.5f, false, 0.5f);// Timer to reproduce preview Animation Current Ultimate and then active ultimate
+				GetWorld()->GetTimerManager().SetTimer(UltimateDurationHandle, this, &AMainCharacter::UltimateCountingDuration, 1.0f, true, 0.0f);	
+				return;
 			}
 		}
 
 		if (bHasMovilityUltimateReady)
 		{
-			StartMovilityUltimate();
 			bIsUltimate = true;
+			bIsMovilityUltimate = true;
+			bHasMovilityUltimateReady = false;
+			MovilityCurrentDuration = MovilityUltiMaxDuration;
+
+			StartMovilityUltimate();
+
+			GetWorld()->GetTimerManager().SetTimer(UltimateDurationHandle, this, &AMainCharacter::UltimateCountingDuration, 1.0f, true, 0.0f);
 			return;
+		}
+		if (bHasDefenceUltimateReady)
+		{
+			if (IsValid(MyPilarsReference))
+			{
+				bIsUltimate = true;
+				bIsDefenceUltimate = true;
+				bHasDefenceUltimateReady = false;
+				DefenceCurrentDuration = DefenceUltiMaxDuration;
+
+				StartDefenceUltimate();
+
+				GetWorld()->GetTimerManager().SetTimer(UltimateDurationHandle, this, &AMainCharacter::UltimateCountingDuration, 1.0f, true, 0.0f);
+
+			}
 		}
 
 	}
@@ -584,20 +620,17 @@ void AMainCharacter::ActivateCurrentUltimate()
 /////////////////////////Attack Ultimate ///////////////////
 void AMainCharacter::StartAttackUltimate()
 {
-	bIsAttackUltimate = true;
 	GetWorldTimerManager().ClearTimer(AttackUltimateHandle);
 	GetCharacterMovement()->JumpZVelocity = 2500;
 	GetCharacterMovement()->AirControl = 3.0f;
 	Jump();
 	StartSwitchWeapon();
-	GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::EndAttackUltimate, 15.0f, false, 15.0f);
 }
 void AMainCharacter::EndAttackUltimate()
 {
 	bIsAttackUltimate = false;
 	GetCharacterMovement()->GravityScale = 1.0;
 	RocketAmmo = 5;
-	GetWorldTimerManager().ClearTimer(AttackUltimateHandle);
 }
 
 /////////////////////////Movility Ultimate ///////////////////
@@ -608,8 +641,6 @@ void AMainCharacter::StartMovilityUltimate()
 		BP_EndCameraSprint();
 		bIsSprintCalled = false;
 	}
-	bIsMovilityUltimate = true;
-	AdrenalinaSpeed = MaxAdrenalinaSpeed;
 	PlayerRate = 1.5;
 	UpdatePlayerProperties();
 }
@@ -636,6 +667,92 @@ void AMainCharacter::EndMovilityUltimate()
 	UpdatePlayerProperties();
 }
 
+/////////////////////////Defence Ultimate ///////////////////
+void AMainCharacter::StartDefenceUltimate()
+{
+	TArray<AActor*> MyPilars;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), MyPilarsReference, MyPilars);
+
+	for (auto& Pi : MyPilars)
+		{
+			AOR_BasePilar* Pilarsito = Cast<AOR_BasePilar>(Pi);
+			if (IsValid(Pilarsito))
+			{
+				Pilarsito->StartUltimate();
+			}
+		}
+	
+
+}
+void AMainCharacter::EndDefenceUltimate()
+{
+	bIsDefenceUltimate = false;
+	bIsUltimate = false;
+
+	TArray<AActor*> MyPilars;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), MyPilarsReference, MyPilars);
+
+	for (auto& Pi : MyPilars)
+	{
+		AOR_BasePilar* Pilarsito = Cast<AOR_BasePilar>(Pi);
+		if (IsValid(Pilarsito))
+		{
+			Pilarsito->StopUltimate();
+		}
+	}
+}
+
+
+
+void AMainCharacter::UltimateCountingDuration()
+{
+	if (bIsAttackUltimate)
+	{
+		if (AttackCurrentDuration-1 == 0)
+		{
+			AttackCurrentDuration--;
+			EndAttackUltimate();
+			GetWorldTimerManager().ClearTimer(UltimateDurationHandle);
+			return;
+		}
+		else
+		{
+			AttackCurrentDuration--;
+			return;
+		}
+		
+	}
+	if (bIsMovilityUltimate)
+	{
+		if (MovilityCurrentDuration-1 == 0)
+		{
+			MovilityCurrentDuration--;
+			EndMovilityUltimate();
+			GetWorldTimerManager().ClearTimer(UltimateDurationHandle);
+			return;
+		}
+		else
+		{
+			MovilityCurrentDuration--;
+			return;
+		}	
+	}
+	if (bIsDefenceUltimate)
+	{
+		if (DefenceCurrentDuration - 1 <= 0)
+		{
+			DefenceCurrentDuration--;
+			EndDefenceUltimate();
+			GetWorldTimerManager().ClearTimer(UltimateDurationHandle);
+		}
+		else
+		{
+			DefenceCurrentDuration--;
+		}	
+	}
+}
+
+
 
 
 ///////////////////////// One Heatl Change Delegate ///////////////////
@@ -650,45 +767,6 @@ void AMainCharacter::OnHealthChange(UOR_HealthComponent* CurrentHealthComponent,
 			GameModeReference->GameOver(this);
 		}
 		
-	}
-}
-
-
-void AMainCharacter::AddAttackPilarRate()
-{
-	
-	if (AttackPilarRateState >= MaxPilarsRate)
-	{
-		bHasAttackUltimateReady = true;
-	}
-	else
-	{
-		AttackPilarRateState++;
-	}
-	
-}
-
-void AMainCharacter::AddDefencePilarRate()
-{
-	if (DefencePilarRateState >= MaxPilarsRate)
-	{
-		bHasDefenceUltimateReady = true;
-	}
-	else
-	{
-		DefencePilarRateState++;
-	}
-}
-
-void AMainCharacter::AddMovilityPilarRate()
-{
-	if (MovilityPilarRateState >= MaxPilarsRate)
-	{
-		bHasMovilityUltimateReady = true;
-	}
-	else
-	{
-		MovilityPilarRateState++;
 	}
 }
 
@@ -836,24 +914,10 @@ void AMainCharacter::Tick(float DeltaTime)
 		UpdatePlayerProperties();
 	}
 
-	///// DrainRate Ultimate Movility ////  
-	if (bIsMovilityUltimate)
-	{
-		if (GetMovementStatus() == EMovementStatus::EMS_Sprinting)
-		{
-			DeltaAdrenalinaSpeed = AdrenalinaSpeedDrainRate * DeltaTime;
-			AdrenalinaSpeed = FMath::Clamp(AdrenalinaSpeed - DeltaAdrenalinaSpeed, 0.0f, MaxAdrenalinaSpeed);
-		}
-		else
-		{
-			DeltaAdrenalinaSpeed = AdrenalinaSpeedDrainRate/4 * DeltaTime;
-			AdrenalinaSpeed = FMath::Clamp(AdrenalinaSpeed - DeltaAdrenalinaSpeed, 0.0f, MaxAdrenalinaSpeed);
-		}	
 
-		if (AdrenalinaSpeed <= 0.0)
-		{
-			EndMovilityUltimate();
-		}
+	if (!bIsAttackUltimate && AttackCurrentDuration > 0)
+	{
+		AttackCurrentDuration = FMath::Clamp(AttackCurrentDuration - (5 * DeltaTime), 0.0f, AttackUltiMaxDuration);
 	}
 
 

@@ -3,12 +3,16 @@
 
 #include "Pilars/OR_Pilar.h"
 #include "Character/OR_MainCharacter.h"
+#include "AI/OR_Enemy.h"
 
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
+
 // Sets default values
 AOR_Pilar::AOR_Pilar()
 {
@@ -28,7 +32,12 @@ AOR_Pilar::AOR_Pilar()
 	MeshCone->SetupAttachment(MeshSphere);
 
 
-
+	bHasMovementEnemy = false;
+	bHasBackIdle = false;
+	PilarInterpolationSpeed = 3.0;
+	MaxPilarRateState = 20;
+	PilarDrainRate = 0.5;
+	
 }
 
 
@@ -36,6 +45,19 @@ AOR_Pilar::AOR_Pilar()
 void AOR_Pilar::BeginPlay()
 {
 	Super::BeginPlay();
+
+	IdlePosition = MeshSphere->GetComponentRotation();
+
+	
+	AMainCharacter* Main = Cast<AMainCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (IsValid(Main))
+	{
+		MainCharacter = Main;
+	}
+	if (IsValid(MainCharacter))
+	{
+		
+	}
 
 
 	CollisionVolume->OnComponentBeginOverlap.AddDynamic(this, &AOR_Pilar::OnOverlapBegin);
@@ -48,6 +70,45 @@ void AOR_Pilar::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bHasMovementEnemy)
+	{
+		if (IsValid(CurrentEnemyTarget))
+		{
+			RotationTorret = UKismetMathLibrary::FindLookAtRotation(MeshSphere->GetComponentLocation(), CurrentEnemyTarget->GetActorLocation());
+			FRotator InterpRotation = FMath::RInterpTo(MeshSphere->GetComponentRotation(), RotationTorret, DeltaTime, PilarInterpolationSpeed);
+			MeshSphere->SetWorldRotation(InterpRotation);
+		}
+	}
+
+	if (bHasBackIdle)
+	{
+		FRotator InterpRotation = FMath::RInterpTo(MeshSphere->GetComponentRotation(), IdlePosition, DeltaTime, PilarInterpolationSpeed);
+		MeshSphere->SetWorldRotation(InterpRotation);
+
+		/** Stop Movement if is Already in Idle*/
+		if (MeshSphere->GetComponentRotation() == IdlePosition)
+		{
+			bHasBackIdle = false;
+		}
+	}
+
+	if (!MainCharacter->GetHasAttackUltimateReady() && AttackPilarRateState > 0 && !MainCharacter->GetIsOnPilarAttack())
+	{
+		AttackPilarRateState = FMath::Clamp(AttackPilarRateState - (PilarDrainRate * DeltaTime), 0.0f, MaxPilarRateState);
+	}
+
+
+	if (!MainCharacter->GetHasDefenceUltimateReady() && DefencePilarRateState > 0 && !MainCharacter->GetIsOnPilarDefence())
+	{
+		DefencePilarRateState = FMath::Clamp(DefencePilarRateState - (PilarDrainRate * DeltaTime), 0.0f, MaxPilarRateState);
+	}
+
+
+	if (!MainCharacter->GetHasMovilityUltimateReady() && MovilityPilarRateState > 0 && !MainCharacter->GetIsOnPilarMovility())
+	{
+		MovilityPilarRateState = FMath::Clamp(MovilityPilarRateState - (PilarDrainRate * DeltaTime), 0.0f, MaxPilarRateState);
+	}
+
 }
 
 void AOR_Pilar::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -58,20 +119,165 @@ void AOR_Pilar::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor*
 
 		if (IsValid(Main))
 		{
-			if (MainCharacter == nullptr)
+			if (IsValid(MainCharacter))
 			{
-				MainCharacter = Main;
-			}
+				SetCharacterOverlapState(true);
+				ActivateTimer();
+			}	
+		}
 
-			ActivateTimer();
+		AOR_Enemy* Enemy = Cast<AOR_Enemy>(OtherActor);
+
+		if (IsValid(Enemy))
+		{
+			EnemyArray.Add(Enemy);
+
+			if (bIsInAttack && CurrentEnemyTarget == nullptr)
+			{
+				ActivateUltimate();
+			}
 		}
 	}
 }
 
+
 void AOR_Pilar::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	GetWorld()->GetTimerManager().ClearTimer(AddTorretRateHandle);
+	if (IsValid(OtherActor))
+	{
+		AMainCharacter* Main = Cast<AMainCharacter>(OtherActor);
+		if (IsValid(Main))
+		{
+			SetCharacterOverlapState(false);
+			GetWorld()->GetTimerManager().ClearTimer(AddTorretRateHandle);
+		}
+
+		AOR_Enemy* Enemy = Cast<AOR_Enemy>(OtherActor);
+
+		if (IsValid(Enemy))
+		{
+
+			EnemyArray.Remove(Enemy);
+
+			if (Enemy == CurrentEnemyTarget && bIsInAttack)
+			{
+				StartMovementFunction();
+			}
+		}
+	}
 }
+
+
+void AOR_Pilar::ActivateUltimate()
+{
+	StartMovementFunction();
+	if (bHasMovementEnemy)
+	{
+		BP_StartFire();
+	}
+	bIsInAttack = true;
+}
+
+void AOR_Pilar::DeactivateUltimate()
+{
+	//StopMovement();
+	//bIsInAttack = false;
+}
+
+
+
+void AOR_Pilar::StartMovementFunction()
+{
+	if (GetNewTargertEnemy())
+	{
+		if (bHasBackIdle)
+		{
+			bHasBackIdle = false;
+		}
+
+		bHasMovementEnemy = true;
+	}
+	else
+	{
+		if (bHasMovementEnemy)
+		{
+			bHasMovementEnemy = false;
+		}
+
+		bHasBackIdle = true;
+	}
+
+}
+
+void AOR_Pilar::StartFire()
+{
+	BP_StartFire();
+}
+
+void AOR_Pilar::StopFire()
+{
+	BP_StoptFire();
+}
+
+void AOR_Pilar::StopMovement()
+{
+	if (bHasMovementEnemy)
+	{
+		bHasMovementEnemy = false;
+	}
+
+	if (CurrentEnemyTarget != nullptr)
+	{
+		CurrentEnemyTarget = nullptr;
+	}
+
+	bHasBackIdle = true;
+}
+
+
+
+void AOR_Pilar::SetCharacterOverlapState(bool state)
+{
+	if (GetPylarType() == AOR_PilarType::PilarType_Attack)
+	{
+		MainCharacter->SetIsOnPilarAttack(state);
+		return;
+	}
+	if (GetPylarType() == AOR_PilarType::PilarType_Defence)
+	{
+		MainCharacter->SetIsOnPilarDefence(state);
+		return;
+	}
+	if (GetPylarType() == AOR_PilarType::PilarType_Movility)
+	{
+		MainCharacter->SetIsOnPilarMovility(state);
+		return;
+	}
+}
+
+bool AOR_Pilar::GetNewTargertEnemy()
+{
+	if (EnemyArray.Num() > 0)
+	{
+
+		CurretRandArrayEnemy = FMath::RandRange(0, EnemyArray.Num() - 1);
+
+		CurrentEnemyTarget = EnemyArray[CurretRandArrayEnemy];
+
+		return true;
+	}
+	else
+	{
+		if (CurrentEnemyTarget != nullptr)
+		{
+			CurrentEnemyTarget = nullptr;
+		}
+
+		return false;
+	}
+	
+}
+
 
 
 void AOR_Pilar::ActivateTimer()
@@ -87,7 +293,24 @@ void AOR_Pilar::SendTorretType()
 
 		if (!MainCharacter->GetHasAttackUltimateReady())
 		{
-			MainCharacter->AddAttackPilarRate();
+			if (AttackPilarRateState + 1 > MaxPilarRateState)
+			{
+				AttackPilarRateState = FMath::Clamp(AttackPilarRateState + 1, 0.0f, MaxPilarRateState);
+
+				MainCharacter->SetHasAttackUltimateReady(true);
+
+				if (MainCharacter->GetHasDefenceUltimateReady() || MainCharacter->GetHasMovilityUltimateReady())
+				{
+					MainCharacter->SetHasDefenceUltimateReady(false);
+					MainCharacter->SetHasMovilityUltimateReady(false);
+				}
+					
+				GetWorld()->GetTimerManager().ClearTimer(AddTorretRateHandle);
+			}
+			else
+			{
+				AttackPilarRateState++;
+			}
 		}
 		else
 		{
@@ -95,28 +318,65 @@ void AOR_Pilar::SendTorretType()
 		}
 
 		break;
-	case AOR_PilarType::PilarType_Defense:
+
+	case AOR_PilarType::PilarType_Defence:
 
 		if (!MainCharacter->GetHasDefenceUltimateReady())
 		{
-		   MainCharacter->AddDefencePilarRate();
+			if (DefencePilarRateState + 1 > MaxPilarRateState)
+			{
+				DefencePilarRateState = FMath::Clamp(DefencePilarRateState + 1, 0.0f, MaxPilarRateState);
+
+				MainCharacter->SetHasDefenceUltimateReady(true);
+
+				if (MainCharacter->GetHasAttackUltimateReady() || MainCharacter->GetHasMovilityUltimateReady())
+				{
+					MainCharacter->SetHasAttackUltimateReady(false);
+					MainCharacter->SetHasMovilityUltimateReady(false);
+				}
+
+				GetWorld()->GetTimerManager().ClearTimer(AddTorretRateHandle);
+			}
+			else
+			{
+				DefencePilarRateState++;
+			}
 		}
 		else
 		{
 			GetWorld()->GetTimerManager().ClearTimer(AddTorretRateHandle);
 		}
+
 		break;
 
 	case AOR_PilarType::PilarType_Movility:
 
 		if (!MainCharacter->GetHasMovilityUltimateReady())
 		{
-		   MainCharacter->AddMovilityPilarRate();
+			if (MovilityPilarRateState + 1 > MaxPilarRateState)
+			{
+				MovilityPilarRateState = FMath::Clamp(MovilityPilarRateState + 1, 0.0f, MaxPilarRateState);
+
+				MainCharacter->SetHasMovilityUltimateReady(true);
+
+				if (MainCharacter->GetHasAttackUltimateReady() || MainCharacter->GetHasDefenceUltimateReady())
+				{
+					MainCharacter->SetHasAttackUltimateReady(false);
+					MainCharacter->SetHasDefenceUltimateReady(false);
+				}
+
+				GetWorld()->GetTimerManager().ClearTimer(AddTorretRateHandle);
+			}
+			else
+			{
+				MovilityPilarRateState++;
+			}
 		}
 		else
 		{
-		 GetWorld()->GetTimerManager().ClearTimer(AddTorretRateHandle);
+			GetWorld()->GetTimerManager().ClearTimer(AddTorretRateHandle);
 		}
+
 		break;
 	default:
 		break;
