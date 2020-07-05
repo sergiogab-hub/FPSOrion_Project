@@ -29,6 +29,10 @@ void AOR_DefencePilar::Tick(float DeltaTime)
 				//Si no esta en Ulti se drena normalmente con la el valor indicado
 				CurrentDefencePilarRate = FMath::Clamp(CurrentDefencePilarRate - (PilarDrainRate * DeltaTime), 0.0f, MaxDefencePilarRate);
 			}
+			else
+			{
+				CurrentDefencePilarRate = FMath::Clamp(CurrentDefencePilarRate - (PilarDrainRate + 10 * DeltaTime), 0.0f, MaxDefencePilarRate);
+			}
 	
 		}
 		else

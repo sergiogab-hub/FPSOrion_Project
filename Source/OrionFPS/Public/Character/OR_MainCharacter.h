@@ -513,12 +513,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bIsOnPilarMovility;
 
-
-
-
-
-
-	
+	/** Drain Rate Ultimate Control  */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+		float DrainRateUltimate;
 
 
 public:

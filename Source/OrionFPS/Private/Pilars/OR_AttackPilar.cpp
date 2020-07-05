@@ -28,6 +28,12 @@ void AOR_AttackPilar::Tick(float DeltaTime)
 				//Si no esta en Ulti se drena normalmente con la el valor indicado
 				CurrentAttackPilarRate = FMath::Clamp(CurrentAttackPilarRate - (PilarDrainRate * DeltaTime), 0.0f, MaxAttackPilarRate);
 			}
+			else
+			{
+				//Si Activo la Ultimate especifica de esta torreta lo dreno super rapido
+				CurrentAttackPilarRate = FMath::Clamp(CurrentAttackPilarRate - (PilarDrainRate + 10 * DeltaTime), 0.0f, MaxAttackPilarRate);
+
+			}
 		
 
 		}

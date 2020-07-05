@@ -131,8 +131,6 @@ AMainCharacter::AMainCharacter()
 	bHasDefenceUltimateReady = false;
 	bHasMovilityUltimateReady = false;
 
-
-
 	AttackCurrentDuration = 0.f;
 	MovilityCurrentDuration = 0.f;
 	DefenceCurrentDuration = 0.f;
@@ -141,6 +139,7 @@ AMainCharacter::AMainCharacter()
 	bIsOnPilarDefence = false;
 	bIsOnPilarMovility = false;
 
+	DrainRateUltimate = 0.05f;
 
 	bHastoDestroy = false;
 	
@@ -580,8 +579,7 @@ void AMainCharacter::ActivateCurrentUltimate()
 				BP_StarAttackUltimate(); //Call Camera Function -> the BP End is called on Tick else Jump;
 
 				GetWorld()->GetTimerManager().SetTimer(AttackUltimateHandle, this, &AMainCharacter::StartAttackUltimate, 0.5f, false, 0.5f);// Timer to reproduce preview Animation Current Ultimate and then active ultimate
-				GetWorld()->GetTimerManager().SetTimer(UltimateDurationHandle, this, &AMainCharacter::UltimateCountingDuration, 1.0f, true, 0.0f);	
-				return;
+	
 			}
 		}
 
@@ -593,9 +591,6 @@ void AMainCharacter::ActivateCurrentUltimate()
 			MovilityCurrentDuration = MovilityUltiMaxDuration;
 
 			StartMovilityUltimate();
-
-			GetWorld()->GetTimerManager().SetTimer(UltimateDurationHandle, this, &AMainCharacter::UltimateCountingDuration, 1.0f, true, 0.0f);
-			return;
 		}
 		if (bHasDefenceUltimateReady)
 		{
@@ -608,11 +603,10 @@ void AMainCharacter::ActivateCurrentUltimate()
 
 				StartDefenceUltimate();
 
-				GetWorld()->GetTimerManager().SetTimer(UltimateDurationHandle, this, &AMainCharacter::UltimateCountingDuration, 1.0f, true, 0.0f);
-
 			}
 		}
 
+		GetWorld()->GetTimerManager().SetTimer(UltimateDurationHandle, this, &AMainCharacter::UltimateCountingDuration, DrainRateUltimate, true, 0.0f);
 	}
 	
 	
@@ -708,7 +702,7 @@ void AMainCharacter::UltimateCountingDuration()
 {
 	if (bIsAttackUltimate)
 	{
-		if (AttackCurrentDuration-1 == 0)
+		if (AttackCurrentDuration-DrainRateUltimate == 0)
 		{
 			AttackCurrentDuration--;
 			EndAttackUltimate();
@@ -717,37 +711,37 @@ void AMainCharacter::UltimateCountingDuration()
 		}
 		else
 		{
-			AttackCurrentDuration--;
+			AttackCurrentDuration-= DrainRateUltimate;
 			return;
 		}
 		
 	}
 	if (bIsMovilityUltimate)
 	{
-		if (MovilityCurrentDuration-1 == 0)
+		if (MovilityCurrentDuration- DrainRateUltimate == 0)
 		{
-			MovilityCurrentDuration--;
+			MovilityCurrentDuration-= DrainRateUltimate;
 			EndMovilityUltimate();
 			GetWorldTimerManager().ClearTimer(UltimateDurationHandle);
 			return;
 		}
 		else
 		{
-			MovilityCurrentDuration--;
+			MovilityCurrentDuration-= DrainRateUltimate;
 			return;
 		}	
 	}
 	if (bIsDefenceUltimate)
 	{
-		if (DefenceCurrentDuration - 1 <= 0)
+		if (DefenceCurrentDuration - DrainRateUltimate <= 0)
 		{
-			DefenceCurrentDuration--;
+			DefenceCurrentDuration-= DrainRateUltimate;
 			EndDefenceUltimate();
 			GetWorldTimerManager().ClearTimer(UltimateDurationHandle);
 		}
 		else
 		{
-			DefenceCurrentDuration--;
+			DefenceCurrentDuration-= DrainRateUltimate;
 		}	
 	}
 }
