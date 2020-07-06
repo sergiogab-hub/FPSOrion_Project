@@ -3,6 +3,7 @@
 
 #include "Projectiles/OR_BulletProjectile.h"
 #include "Character/OR_MainCharacter.h"
+#include "AI/OR_Enemy.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Particles/ParticleSystemComponent.h"
@@ -64,21 +65,32 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 				{
 					FRotator RotationImpact = UKismetMathLibrary::FindLookAtRotation(Hit.Location, MainCharacter->GetActorLocation());
 
-					AActor* Actoristo = Hit.GetActor();
-					FString Name = Actoristo->GetName();
+					AOR_Enemy* Enemy = Cast<AOR_Enemy>(Hit.GetActor());
 
-					if (Name == FString("Enemy_5"))
+                    if(IsValid(Enemy))
 					{
 						UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, MainCharacter->GetActorRotation().Vector(), Hit, MainCharacter->GetInstigatorController(), this, DamageType);
 
 						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesEnemy, Hit.Location, RotationImpact, FVector(0.4f), true);//0.4
 						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmokeEnemy, Hit.Location, RotationImpact, FVector(0.2f), true);//0.2
 					}
-					else 
+					else
 					{
 						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesStone, Hit.Location, RotationImpact, FVector(1.0f), true);//1.0
 						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmokeStone, Hit.Location, RotationImpact, FVector(0.5f), true);//0.5
-					}	
+					}
+
+					/*AActor* Actoristo = Hit.GetActor();
+					FString Name = Actoristo->GetName();
+
+					if (Name == FString("Enemy_5"))
+					{
+					
+					}
+					else 
+					{
+					
+					}	*/
 				}
           		Destroy();
 			}	

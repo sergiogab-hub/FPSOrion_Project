@@ -113,14 +113,14 @@ AMainCharacter::AMainCharacter()
 
 	//Ultimate Varaibles
 	bIsUltimate = false;
-	RocketAmmo = 5;
 	PlayerRate = 1.0f;
 
 	AttackUltiMaxDuration = 20.0f;
 	MovilityUltiMaxDuration = 20.0f;
 	DefenceUltiMaxDuration = 20.0f;
 
-	UltimateMovilityMaxWalkSpeed = 1100.0f;
+	UltimateMovilitySprintSpeed = 1100.0f;
+	UltimateMovilityNormalSpeed = 900.f;
 
 	bIsAttackUltimate = false;
 	bIsDefenceUltimate = false;
@@ -329,7 +329,7 @@ void AMainCharacter::StartShoot()
 	/** Rocket Shoot */
 	if (GetCurrentWeaponStatus() == ECurrentWeapon::ECW_Rocket)
 	{
-		if (RocketAmmo > 0 && bIsAttackUltimate)
+		if (CurrentRocketAmmo > 0 && bIsAttackUltimate)
 		{
 			RocketShoot();
 			bIsShooting = true;
@@ -617,6 +617,7 @@ void AMainCharacter::StartAttackUltimate()
 	GetWorldTimerManager().ClearTimer(AttackUltimateHandle);
 	GetCharacterMovement()->JumpZVelocity = 2500;
 	GetCharacterMovement()->AirControl = 3.0f;
+	CurrentRocketAmmo = RocketAmmo;
 	Jump();
 	StartSwitchWeapon();
 }
@@ -624,7 +625,7 @@ void AMainCharacter::EndAttackUltimate()
 {
 	bIsAttackUltimate = false;
 	GetCharacterMovement()->GravityScale = 1.0;
-	RocketAmmo = 5;
+	CurrentRocketAmmo = RocketAmmo;
 }
 
 /////////////////////////Movility Ultimate ///////////////////
@@ -635,7 +636,7 @@ void AMainCharacter::StartMovilityUltimate()
 		BP_EndCameraSprint();
 		bIsSprintCalled = false;
 	}
-	PlayerRate = 1.5;
+	PlayerRate = MovilityUltimatePlayerRate;
 	UpdatePlayerProperties();
 }
 
@@ -664,6 +665,8 @@ void AMainCharacter::EndMovilityUltimate()
 /////////////////////////Defence Ultimate ///////////////////
 void AMainCharacter::StartDefenceUltimate()
 {
+	BP_StartDefenceUltimate();
+
 	TArray<AActor*> MyPilars;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), MyPilarsReference, MyPilars);
 
@@ -680,6 +683,8 @@ void AMainCharacter::StartDefenceUltimate()
 }
 void AMainCharacter::EndDefenceUltimate()
 {
+	BP_EndDefenceUltimate();
+
 	bIsDefenceUltimate = false;
 	bIsUltimate = false;
 
@@ -872,7 +877,7 @@ void AMainCharacter::RocketShoot()
 		/*Spawn Projectile*/
 		AOR_RocketProjectile* MyRocket = GetWorld()->SpawnActor<AOR_RocketProjectile>(RocketClass, MuzzleLocation, MuzzleRotation);
 		MyRocket->SetMain(this);
-		RocketAmmo--;
+		CurrentRocketAmmo--;
 		/*Check State*/
 		if (GetMovementStatus() != EMovementStatus::EMS_Pointing)
 		{
@@ -880,7 +885,7 @@ void AMainCharacter::RocketShoot()
 			UGameplayStatics::SpawnEmitterAttached(FinalGun, Weapon, FName("Muzzle"), FVector(ForceInitToZero), FRotator::ZeroRotator, FVector(2.0f));
 		}
 		/*Check Ammo and State*/
-		if (RocketAmmo == 0 && bIsAttackUltimate)
+		if (CurrentRocketAmmo == 0 && bIsAttackUltimate)
 		{
 			EndAttackUltimate();
 		}
@@ -1083,7 +1088,7 @@ void AMainCharacter::UpdatePlayerProperties()
 			else
 			{
 				BP_StartMovilityUltimate();
-				GetCharacterMovement()->MaxWalkSpeed = UltimateMovilityMaxWalkSpeed;
+				GetCharacterMovement()->MaxWalkSpeed = UltimateMovilitySprintSpeed;
 			}
 			
 		}
@@ -1103,7 +1108,7 @@ void AMainCharacter::UpdatePlayerProperties()
 			else
 			{
 				BP_EndMovilityUltimate();
-				GetCharacterMovement()->MaxWalkSpeed = 700;
+				GetCharacterMovement()->MaxWalkSpeed = UltimateMovilityNormalSpeed;
 			}
 			
 		}
@@ -1115,7 +1120,7 @@ void AMainCharacter::UpdatePlayerProperties()
 	{
 		if (!bIsPointedCalled)
 		{
-			BP_StarCameraPointed();
+			BP_StartCameraPointed();
 			bIsPointedCalled = true;
 			SpringArm->bEnableCameraLag = false;
 

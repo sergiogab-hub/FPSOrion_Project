@@ -155,31 +155,31 @@ protected:
 				   //////// Character Components///////
 
 	/** Main Camera Component for Player*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponents")
 		UCameraComponent* Camera;
 
 	/** Arms Skeletal Mesh for Player*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponents")
 		USkeletalMeshComponent* Arms;
 
 	/** Weapon Skeletal Mesh for Player*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponents")
 		USkeletalMeshComponent* Weapon;
 
 	/** Rocket Skeletal Mesh for Player*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponents")
 		USkeletalMeshComponent* Rocket;
 
 	/** Spring Arm (Camera-Arms) for Player*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponents")
 		USpringArmComponent* SpringArm;
 
 	/** Health Component*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponents")
 		UOR_HealthComponent* Health;
 
 	/** Mele Capsule Collision*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponent")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponents")
 		UCapsuleComponent* MeleeDetector;
 
 
@@ -187,16 +187,20 @@ protected:
 
 
 /** Main Camera RelativeRotationVariable*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterProperty")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterPropertys")
 		FRotator CameraRotationWithPawn;
 
 	/** Weapon Socket Name*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterProperty")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterPropertys")
 		FName WeaponSocketName;
 
 	/** Melle Socket Name*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterProperty")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterPropertys")
 		FName MeleeCapsuleSocketName;
+
+	/** Has to Destroy When he dies?*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterPropertys")
+		bool bHastoDestroy;
 
 
 	///////////  References ///////////
@@ -297,8 +301,6 @@ protected:
 	//
 	////////////////////////////////////////////////////////////////////
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main")
-		bool bHastoDestroy;
 
 	////////////////Movement Character Variables//////////////
 
@@ -307,16 +309,12 @@ protected:
 		float RotationSpeed;
 
 	/** Normal MaxWalkSpeed*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		float NormalMaxWalkSpeed;
 
 	/** Sprint MaxWalkSpeed*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		float SprintMaxWalkSpeed;
-
-	/** Initial MaxWalkSpeed*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
-		float UltimateMovilityMaxWalkSpeed;
 
 	/** Control Variable Run State*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
@@ -358,6 +356,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
 		float bIsSwitching;
 
+	/** Control Variable Reload State*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+		bool bIsReload;
+
 	/** Launcher Pad Variable Key*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|CharacterMovement") ////////Temporal tarea
 		bool Key = false;
@@ -369,12 +371,9 @@ protected:
 
 	////////////////////Combat Character/////////////////////
 
-/** Control Variable Reload State*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
-		bool bIsReload;
 
 	/** Control Variable Reload State*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterMovement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterCombat")
 		bool bIsMeleeAttack;
 
 	/** Shooting Control Variable*/
@@ -429,25 +428,41 @@ protected:
 		bool bIsUltimate;
 
 	/** Rockry AmmoCount */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate|AttackUltimate")
+		int32 CurrentRocketAmmo;
+
+	/** Rockry AmmoCount */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate|AttackUltimate")
 		int32 RocketAmmo;
 
+
 	/** Attack Ultimate */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate|AttackUltimate")
 		float AttackUltiMaxDuration;
 
 	/** Defence Ultimate */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate|DefenceUltimate")
 		float DefenceUltiMaxDuration;
 
 	/** Movility Ultimate */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate|MovilityUltimate")
 		float MovilityUltiMaxDuration;
 
+	/** Ultimate Movility SprintSpeed*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate|MovilityUltimate")
+		float UltimateMovilitySprintSpeed;
+
+	/** Ultimate Movility NormalSpeed*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate|MovilityUltimate")
+		float UltimateMovilityNormalSpeed;
 
 	/** Player Rate Anim */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate|MovilityUltimate")
 		float PlayerRate;
+
+	/** Player Rate Anim */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate|MovilityUltimate")
+		float MovilityUltimatePlayerRate;
 
 	/** Is ultimate Active */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
@@ -461,7 +476,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bIsMovilityUltimate;
 
-
 	/** Has Ultimate Ready Pilar */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bHasAttackUltimateReady;
@@ -473,20 +487,6 @@ protected:
 	/** Has Ultimate Ready Pilar */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		bool bHasMovilityUltimateReady;
-
-
-	/** Attack Ultimate Percent */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		float PilarAttackPercent;
-
-	/** DefenceUltimate Percent */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		float PilarDefencePercent;
-
-	/** Movility UltimatePercent */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		float PilarMovilityPercent;
-
 
 	/** AttackUltimateDuration */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
@@ -500,23 +500,35 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		float DefenceCurrentDuration;
 
-
-	/** Pilar Attack Control Overlap */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		bool bIsOnPilarAttack;
-
-	/** Pilar Defence Control Overlap */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		bool bIsOnPilarDefence;
-
-	/** Pilar Movility Control Overlap */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
-		bool bIsOnPilarMovility;
-
 	/** Drain Rate Ultimate Control  */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate")
 		float DrainRateUltimate;
 
+	                 ////////////////////Pilars/////////////////////
+
+	/** Pilar Attack Control Overlap */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|Pilars")
+		bool bIsOnPilarAttack;
+
+	/** Pilar Defence Control Overlap */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|Pilars")
+		bool bIsOnPilarDefence;
+
+	/** Pilar Movility Control Overlap */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|Pilars")
+		bool bIsOnPilarMovility;
+
+	/** Attack Pilar Percent */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|Pilars")
+		float PilarAttackPercent;
+
+	/** Defence Pilar Percent */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|Pilars")
+		float PilarDefencePercent;
+
+	/** Movility Pilar Percent */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|Pilars")
+		float PilarMovilityPercent;
 
 public:
 	////////////////////////////////////////////////////////////////////
@@ -577,22 +589,12 @@ public:
 
 	FORCEINLINE UOR_HealthComponent* GetHealthComponent() { return Health;}
 
-
-	FORCEINLINE float GetPlayerRate() const { return PlayerRate; }
-
 	void SetEnumMeleeCollision(ECollisionEnabled::Type CollisionState);
 
 
+	                          /////// ultimate States/Variables //////
 
-
-
-
-	FORCEINLINE void SetPilarAttackPercent(float Percent)  { PilarAttackPercent=Percent; }
-
-	FORCEINLINE void SetPilarDefencePercent(float Percent) { PilarDefencePercent = Percent; }
-
-	FORCEINLINE void SetPilarMovilityPercent(float Percent) { PilarMovilityPercent = Percent; }
-
+	FORCEINLINE float GetPlayerRate() const { return PlayerRate; }
 
 
 	FORCEINLINE bool GetIsAttackUltimate() const { return bIsAttackUltimate; }
@@ -608,12 +610,22 @@ public:
 
 	FORCEINLINE bool GetHasMovilityUltimateReady() const { return bHasMovilityUltimateReady; }
 
-	FORCEINLINE void SetHasAttackUltimateReady(bool MyBool)  { bHasAttackUltimateReady=MyBool; }
 
-	FORCEINLINE void SetHasDefenceUltimateReady(bool MyBool)  { bHasDefenceUltimateReady=MyBool; }
+	FORCEINLINE void SetHasAttackUltimateReady(bool MyBool) { bHasAttackUltimateReady = MyBool; }
 
-	FORCEINLINE void SetHasMovilityUltimateReady(bool MyBool)  { bHasMovilityUltimateReady=MyBool; }
+	FORCEINLINE void SetHasDefenceUltimateReady(bool MyBool) { bHasDefenceUltimateReady = MyBool; }
 
+	FORCEINLINE void SetHasMovilityUltimateReady(bool MyBool) { bHasMovilityUltimateReady = MyBool; }
+
+
+	                        /////// Pilars States/Variables //////
+
+
+	FORCEINLINE void SetPilarAttackPercent(float Percent)  { PilarAttackPercent=Percent; }
+
+	FORCEINLINE void SetPilarDefencePercent(float Percent) { PilarDefencePercent = Percent; }
+
+	FORCEINLINE void SetPilarMovilityPercent(float Percent) { PilarMovilityPercent = Percent; }
 
 
 	FORCEINLINE void SetIsOnPilarAttack(bool MyBool)  { bIsOnPilarAttack = MyBool; }
@@ -621,6 +633,7 @@ public:
 	FORCEINLINE void SetIsOnPilarDefence(bool MyBool) { bIsOnPilarDefence = MyBool; }
 
 	FORCEINLINE void SetIsOnPilarMovility(bool MyBool) { bIsOnPilarMovility = MyBool; }
+
 
 	FORCEINLINE bool GetIsOnPilarAttack() const { return bIsOnPilarAttack;}
 
@@ -641,7 +654,7 @@ public:
 
 	/** Star Camera Pointed BP Camera Logic*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_MovementEvents")
-		void BP_StarCameraPointed();
+		void BP_StartCameraPointed();
 
 	/** End Camera Pointed BP Camera Logic*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main|BP_MovementEvents")
@@ -731,6 +744,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEventss")
 		void BP_EndMovilityUltimate();
 
+	/**Start Defence Ultimate*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEvents")
+		void BP_StartDefenceUltimate();
+
+	/**End Defence Ultimate*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_UltimateEventss")
+		void BP_EndDefenceUltimate();
+
 
 	             /////////////Death State BP Functions /////////////////
 
@@ -797,10 +818,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
 		void  StartAttackUltimate();
 
-	/** Shoot Rocket Function*/
-	UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
-		void RocketShoot();
-
 	/***End Attack Ultimate Function*/
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
 		void  EndAttackUltimate();
@@ -813,27 +830,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
 		void  EndMovilityUltimate();
 
-	    /** Shoot FTimerHablde */
-	     FTimerHandle AttackUltimateHandle;
+     /***Start Defence Ultimate*/
+	 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
+		 void StartDefenceUltimate();
 
+	 /***End Defence Ultimate*/
+	 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
+		 void EndDefenceUltimate();
+
+	 /** Shoot Rocket Function*/
+	 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
+		 void RocketShoot();
 
 	 /***UltimateDuration*/
 	 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
 		 void  UltimateCountingDuration();
-    
-	   /** Shoot FTimerHablde */
+
+	 /** Shoot FTimerHablde */
 	     FTimerHandle UltimateDurationHandle;
 
-	 /***EndDefenceUltimate*/
-		 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
-			 void EndDefenceUltimate();
-
-	 /***StartDefenceUltimate*/
-		 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
-			 void StartDefenceUltimate();
-
-
-
+	 /** Shoot FTimerHablde */
+	     FTimerHandle AttackUltimateHandle;
 
 
 	 ////////////////// Delegate Component ///////////////////////
