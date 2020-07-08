@@ -26,71 +26,73 @@ public:
 
 protected:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Pilar / Collisions")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = " BasePilar| Collisions")
 		UBoxComponent* CollisionVolume;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Pilar / Mesh")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BasePilar | Mesh")
 		UStaticMeshComponent* MeshSphere;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Pilar / Mesh")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BasePilar | Mesh")
 		UStaticMeshComponent* MeshCilinder;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Pilar / Mesh")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BasePilar | Mesh")
 		UStaticMeshComponent* MeshCone;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Pilar / Reference")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = " BasePilar | Reference")
 		AMainCharacter* MainCharacterReference;
 
 protected:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pilar / Rate")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar| Rate")
 		float PilarDrainRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pilar / Rate")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar | Rate")
 		float PilarAddRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pilar / Rate")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar| Rate")
 		float PilarTickRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pilar / Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar | Movement")
 		float MinPilarInterpMovementSpeed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pilar / Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar | Movement")
 		float CurrentPilarInterpMovementSpeed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pilar / Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar | Movement")
 		float MaxInterpMovementSpeed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pilar / Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar | Movement")
 		FRotator IdleRotation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pilar / Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar | Movement")
 		bool bIsOnUltimate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pilar / Enemy")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar | Enemy")
 		int32 CurrentIndexEnemyArray;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pilar/Enemy")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BasePilar | Enemy")
 		TArray<AOR_Enemy*> EnemyArray;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pilar/Enemy")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BasePilar | Enemy")
 		AOR_Enemy* CurrentEnemyTarget;
 
 	FTimerHandle MovemenetTorretHandle;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pilar/Shoot")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "BasePilar | Shoot")
 		UParticleSystem* ShootTorretParticle;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pilar/Shoot")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BasePilar | Shoot")
 		UParticleSystemComponent* ShootParticleSystemComponent;
 
 	/** Projectile Rocket to spawn */
-	UPROPERTY(EditDefaultsOnly, Category = "Pilar/Shoot")
+	UPROPERTY(EditDefaultsOnly, Category = "BasePilar |Shoot")
 		TSubclassOf<AActor> Collider;
 
 	FTimerHandle ShootHandle;
 
 	FTimerHandle ColliderSpawnHandle;
+
+	FTimerHandle CameraHandle;
 
 protected:
 	// Called when the game starts or when spawned
@@ -112,6 +114,8 @@ protected:
 
 	void SpawnCollider();
 
+
+
 public:	
 
 	UFUNCTION()
@@ -119,6 +123,9 @@ public:
 
 	UFUNCTION()
 	void StopUltimate();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void BP_CameraShake();
 
 	
 	UFUNCTION()

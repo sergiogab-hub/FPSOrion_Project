@@ -232,7 +232,7 @@ void AOR_BasePilar::StopShoot()
 	if (IsValid(ShootParticleSystemComponent))
 	{
 		GetWorld()->GetTimerManager().ClearTimer(ColliderSpawnHandle);
-		ShootParticleSystemComponent->Deactivate();
+		ShootParticleSystemComponent->DeactivateSystem();
 	}
 
 }
@@ -242,6 +242,9 @@ void AOR_BasePilar::SpawnCollider()
 	if (IsValid(Collider))
 	{
 		GetWorld()->SpawnActor<AActor>(Collider, MeshCone->GetComponentLocation(), MeshSphere->GetComponentRotation());
+		BP_CameraShake();
+
 	}
 	
 }
+

@@ -435,7 +435,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterUltimate|AttackUltimate")
 		int32 RocketAmmo;
 
-
 	/** Attack Ultimate */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Main|CharacterUltimate|AttackUltimate")
 		float AttackUltiMaxDuration;
@@ -533,7 +532,7 @@ protected:
 public:
 	////////////////////////////////////////////////////////////////////
 	//
-	//   Getter /Setter Enum State/
+	//   Getter /Setter - Enum State/
 	//
 	////////////////////////////////////////////////////////////////////
 
@@ -842,14 +841,14 @@ public:
 	 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
 		 void RocketShoot();
 
-	 /***UltimateDuration*/
+	 /***Ultimate Counting Duration*/
 	 UFUNCTION(BlueprintCallable, Category = "Main|CharacterUltimate")
 		 void  UltimateCountingDuration();
 
-	 /** Shoot FTimerHablde */
+	 /** Ultimate Duration Handle FTimerHablde */
 	     FTimerHandle UltimateDurationHandle;
 
-	 /** Shoot FTimerHablde */
+	 /** Attack Ultimate Handle FTimerHablde */
 	     FTimerHandle AttackUltimateHandle;
 
 

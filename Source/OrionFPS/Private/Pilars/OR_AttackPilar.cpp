@@ -47,6 +47,8 @@ void AOR_AttackPilar::Tick(float DeltaTime)
 			
 		}
 
+		//Se envia el Rate al Main para que se imprima
+
 		MainCharacterReference->SetPilarAttackPercent(CurrentAttackPilarRate / MaxAttackPilarRate);
 	}
 

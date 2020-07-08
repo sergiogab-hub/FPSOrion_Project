@@ -841,8 +841,8 @@ void AMainCharacter::Shoot()
 				/*Get Socket Transforms*/
 				FVector MuzzleLocation = Weapon->GetSocketLocation("Muzzle");
 				FRotator MuzzleRotation = Weapon->GetSocketRotation("Muzzle");
-				MuzzleRotation.Pitch = MuzzleRotation.Pitch - 2.5f; //Adjust Socket Rotation for Fire Under
-				MuzzleRotation.Yaw = MuzzleRotation.Yaw + 2;//Adjust Socket Rotation Fire Under
+				MuzzleRotation.Pitch = MuzzleRotation.Pitch - FMath::FRandRange(0 , 2.0);  // FMath::FRandRange(0, 2.5); // 2.5f; //Adjust Socket Rotation for Fire Under 
+				MuzzleRotation.Yaw = MuzzleRotation.Yaw + FMath::FRandRange(-1.0 , 1.0); //FMath::FRandRange(0, 2.0); //2;//Adjust Socket Rotation Fire Under
 
 
 				/*Spawn Projectile*/

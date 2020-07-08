@@ -31,6 +31,7 @@ void AOR_DefencePilar::Tick(float DeltaTime)
 			}
 			else
 			{
+				//Se Drena Rapido cuando activa la Ultia y no esta en el Pilar
 				CurrentDefencePilarRate = FMath::Clamp(CurrentDefencePilarRate - (PilarDrainRate + 10 * DeltaTime), 0.0f, MaxDefencePilarRate);
 			}
 	
@@ -39,10 +40,12 @@ void AOR_DefencePilar::Tick(float DeltaTime)
 		{
 			if (MainCharacterReference->GetIsDefenceUltimate())
 			{
+				//Se Drena Rapido cuando activa la Ulti cuando esta en el Pilar
 				CurrentDefencePilarRate = FMath::Clamp(CurrentDefencePilarRate - (PilarDrainRate + 10 * DeltaTime), 0.0f, MaxDefencePilarRate);
             }
 		}
 
+		//Enviar el Percent al Main para imprimirlo
 		MainCharacterReference->SetPilarDefencePercent(CurrentDefencePilarRate / MaxDefencePilarRate);
     }
 	

@@ -20,10 +20,10 @@ public:
 
 protected:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pilar/Rate")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AttackPilar | Rate")
 		float CurrentAttackPilarRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pilar/Rate")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AttackPilar | Rate")
 		float MaxAttackPilarRate;
 
 	FTimerHandle AttackRateHandle;
