@@ -219,7 +219,7 @@ void AOR_BasePilar::StartShoot()
 	if (IsValid(ShootTorretParticle))
 	{
 		ShootParticleSystemComponent=UGameplayStatics::SpawnEmitterAttached(ShootTorretParticle, MeshCone, FName("None"), FVector(ForceInitToZero), MeshCone->GetRelativeRotation(), FVector(2.0f, 2.0f, 2.0f));
-		GetWorld()->GetTimerManager().SetTimer(ColliderSpawnHandle, this, &AOR_BasePilar::SpawnCollider, 3.65, false, 3.65);
+		GetWorld()->GetTimerManager().SetTimer(ColliderSpawnHandle, this, &AOR_BasePilar::SpawnCollider, 3.8, false, 3.8);
 		
 	}
 

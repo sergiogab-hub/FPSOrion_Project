@@ -26,7 +26,7 @@ public:
 
 protected:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = " BasePilar| Collisions")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = " BasePilar | Collisions")
 		UBoxComponent* CollisionVolume;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BasePilar | Mesh")
@@ -43,13 +43,13 @@ protected:
 
 protected:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar| Rate")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar | Rate")
 		float PilarDrainRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar | Rate")
 		float PilarAddRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar| Rate")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar | Rate")
 		float PilarTickRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BasePilar | Movement")
