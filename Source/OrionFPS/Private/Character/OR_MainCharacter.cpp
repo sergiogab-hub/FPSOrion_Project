@@ -592,6 +592,7 @@ void AMainCharacter::ActivateCurrentUltimate()
 
 			StartMovilityUltimate();
 		}
+
 		if (bHasDefenceUltimateReady)
 		{
 			if (IsValid(MyPilarsReference))
@@ -914,11 +915,6 @@ void AMainCharacter::Tick(float DeltaTime)
 	}
 
 
-	if (!bIsAttackUltimate && AttackCurrentDuration > 0)
-	{
-		AttackCurrentDuration = FMath::Clamp(AttackCurrentDuration - (5 * DeltaTime), 0.0f, AttackUltiMaxDuration);
-	}
-
 
 
 	///// Set Jumping Control / Attack Ultimate ////  
@@ -940,7 +936,8 @@ void AMainCharacter::Tick(float DeltaTime)
 			bIsJumping = false;
 			bIsJumpCalled = false;
 			BP_EndCameraJump();
-
+			
+			//Check Equip Rocket and Attack Ultimate
 			if (GetCurrentWeaponStatus() == ECurrentWeapon::ECW_Rocket)
 			{
 				BP_EndAttackUltimate();
@@ -1080,6 +1077,7 @@ void AMainCharacter::UpdatePlayerProperties()
 		{
 			bIsSprintCalled = true;
 
+			//Ultimate Control
 			if (!bIsMovilityUltimate)
 			{
 				BP_StarCameraSprint();
@@ -1100,6 +1098,7 @@ void AMainCharacter::UpdatePlayerProperties()
 		{
 			bIsSprintCalled = false;
 
+			//Ultimate Control
 			if (!bIsMovilityUltimate)
 			{
 				BP_EndCameraSprint();
