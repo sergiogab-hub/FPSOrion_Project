@@ -27,6 +27,8 @@ public:
 		void UpdateAnimationPropertys();
 
 
+	FORCEINLINE void SetIsIronSigth(bool value) { bIsIronSight = value; }
+
 protected:
 
 	////////////////////////////////////////////////////////////////////
@@ -62,6 +64,15 @@ protected:
 	/** Current Movement Speed (BS) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 		float OwnYaw;
+
+	/** Current Movement Speed (BS) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+		bool bIsIronSight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+		float BlendIronSightWeigth;
+
+
 
 
 

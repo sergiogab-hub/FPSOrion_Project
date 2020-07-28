@@ -2,6 +2,8 @@
 
 
 #include "AI/OR_Enemy.h"
+#include "AI/EnemyAnimInstance.h"
+#include "Character/OR_MainCharacter.h"
 
 
 #include "Engine/World.h"
@@ -9,24 +11,28 @@
 #include "Animation/AnimInstance.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
+#include "NavigationPath.h"
+#include "NavigationSystem.h"
 
 
 // Sets default values
 AOR_Enemy::AOR_Enemy()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Player Camera Component
 	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
-	Weapon->SetupAttachment(GetMesh(),  "WeaponSocket" );
+	Weapon->SetupAttachment(GetMesh(), "WeaponSocket");
 
 
 	LocoPoint0 = CreateDefaultSubobject<USphereComponent>(TEXT("LocoPoint0"));
 	LocoPoint0->SetupAttachment(GetRootComponent());
 	LocoPoint0->InitSphereRadius(15.f);
-		
-	LocoPoint1 =CreateDefaultSubobject<USphereComponent>(TEXT("LocoPoint1"));
+
+	LocoPoint1 = CreateDefaultSubobject<USphereComponent>(TEXT("LocoPoint1"));
 	LocoPoint1->SetupAttachment(GetRootComponent());
 	LocoPoint1->InitSphereRadius(15.f);
 
@@ -57,7 +63,14 @@ AOR_Enemy::AOR_Enemy()
 	LocoPoint7->InitSphereRadius(15.f);
 
 	bIsHipsFiring = false;
-	bIsIronSightFiring = false;
+	bIsIronFiringMoving = false;
+	bIsIronFiringQuiet = false;
+	bIsFiring = false;
+
+	bHasNeedReload = false;
+	bIsRealod = false;
+	MaxMunition = 5;
+	CurrentIndex = 0;
 
 }
 
@@ -83,23 +96,16 @@ void AOR_Enemy::BeginPlay()
 
 	EnemyAnimInstance = GetMesh()->GetAnimInstance();
 
+	CurrentMunition = MaxMunition;
+
+
+	GetWorld()->GetTimerManager().SetTimer(UpdateNavegationSystemHandle, this, &AOR_Enemy::UpdateNavegationSystem, 0.1, true, 0.0);
 }
 
 // Called every frame
 void AOR_Enemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	LocomotionPoints[0] = LocoPoint0->GetComponentLocation();
-	LocomotionPoints[1] = LocoPoint1->GetComponentLocation();
-	LocomotionPoints[2] = LocoPoint2->GetComponentLocation();
-	LocomotionPoints[3] = LocoPoint3->GetComponentLocation();
-	LocomotionPoints[4] = LocoPoint4->GetComponentLocation();
-	LocomotionPoints[5] = LocoPoint5->GetComponentLocation();
-	LocomotionPoints[6] = LocoPoint6->GetComponentLocation();
-	LocomotionPoints[7] = LocoPoint7->GetComponentLocation();
-
-
 
 }
 
@@ -110,28 +116,46 @@ void AOR_Enemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
+
+
+
+
 void AOR_Enemy::StartHipsFire()
 {
 	if (bIsHipsFiring) { return; }
 
-	GetWorld()->GetTimerManager().SetTimer(ShootHipsHandle, this, &AOR_Enemy::Firing, 0.25, true, 0.0);
+	GetWorld()->GetTimerManager().SetTimer(ShootHipsHandle, this, &AOR_Enemy::Firing, 0.5 , true, 0.0);
 	bIsHipsFiring = true;
+
+	
 }
 
-void AOR_Enemy::StartIroSightFire()
+void AOR_Enemy::StartIroSightFire(bool Moving)
 {
-	if (bIsIronSightFiring) { return; }
+	if (bIsIronFiringMoving || bIsIronFiringQuiet) { return;}
 
-	GetWorld()->GetTimerManager().SetTimer(ShootIronHandle, this, &AOR_Enemy::Firing, 0.25, true, 0.0);
-	bIsIronSightFiring = true;
+	if (!Moving)
+	{
+		GetWorld()->GetTimerManager().SetTimer(ShootIronHandle, this, &AOR_Enemy::Firing, 0.233, true, 0.0);
+		bIsIronFiringQuiet = true;
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(ShootIronHandle, this, &AOR_Enemy::Shoot, 1.0, true, 1.0);
+		bIsIronFiringMoving = true;
+	}
+	
 
+
+	
 }
 
 void AOR_Enemy::Firing()
 {
 	if (IsValid(OwnAnimInstance))
 	{
-		if (ShootHipsMontage && ShootIronSightMontage)
+
+	  if (ShootHipsMontage && ShootIronSightMontage)
 		{
 			if (bIsHipsFiring)
 			{
@@ -140,8 +164,19 @@ void AOR_Enemy::Firing()
 			}
 			else
 			{
-				OwnAnimInstance->Montage_Play(ShootIronSightMontage, 1.0f);
-				OwnAnimInstance->Montage_JumpToSection("Default", ShootIronSightMontage);
+
+				if (CurrentMunition <= 0)
+				{
+					bHasNeedReload = true;
+					return;
+				}
+				else
+				{
+					OwnAnimInstance->Montage_Play(ShootIronSightMontage, 1.0f);
+					OwnAnimInstance->Montage_JumpToSection("Default", ShootIronSightMontage);
+					CurrentMunition--;
+				}
+				
 			}
 		}
 	  
@@ -157,29 +192,127 @@ void AOR_Enemy::StopHipsFire()
 		bIsHipsFiring = false;
 	}
 
-	
 }
 
 void AOR_Enemy::StopIronFire()
 {
-	if(bIsIronSightFiring)
-	{
 	GetWorld()->GetTimerManager().ClearTimer(ShootIronHandle);
-	bIsIronSightFiring = false;
+
+	if (bIsIronFiringMoving)
+	{
+		bIsIronFiringMoving = false;
+	}
+	if (bIsIronFiringQuiet)
+	{
+		bIsIronFiringQuiet = false;
+	}
+	
+}
+
+void AOR_Enemy::StopFiring()
+{
+	bIsFiring = false;
+}
+
+void AOR_Enemy::Shoot()
+{
+	if (CurrentMunition <= 0)
+	{
+		bHasNeedReload = true;
+		return;
+	}
+
+	FHitResult Hit;
+	FVector MuzzleSocket = Weapon->GetSocketLocation("MuzzleSocket");
+
+	FVector shakevector;     //	Dispersion de la balas con el rango que le mando del Shootimer2
+
+	if (bIsIronFiringMoving)
+	{
+		shakevector.X = FMath::RandRange(FMath::RandRange(-60, -20), FMath::RandRange(20, 60));
+		shakevector.Y = 20;
+		shakevector.Z = FMath::RandRange(50, 70);
+	}
+	else
+	{
+		shakevector.X = FMath::RandRange(FMath::RandRange(-65, -55), FMath::RandRange(65, 55));
+		shakevector.Y = 20;
+		shakevector.Z = FMath::RandRange(50, 70);
+	}
+
+
+	AMainCharacter* Main = Cast<AMainCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld() ,0));
+
+	if (IsValid(Main))
+	{
+		GetWorld()->LineTraceSingleByChannel(Hit, MuzzleSocket, Main->GetActorLocation() + shakevector, ECC_GameTraceChannel8);
+		DrawDebugLine(GetWorld(),
+			MuzzleSocket,
+			Main->GetActorLocation() + shakevector,
+			FColor::Red,
+			false,
+			10);
+	}
+
+	if (IsValid(Hit.GetActor()))
+	{
+		if (Main == Hit.GetActor())
+		{
+			UGameplayStatics::ApplyPointDamage(Hit.GetActor(), 4, Hit.Location, Hit, this->GetInstigatorController(), this, nullptr);
+		}
+	}
+
+	CurrentMunition--;
+}
+
+void AOR_Enemy::StartReload()
+{
+	if (IsValid(IronSightReload) && IsValid(OwnAnimInstance))
+	{
+		OwnAnimInstance->Montage_Play(IronSightReload, 1.0f);
+		OwnAnimInstance->Montage_JumpToSection("Default", IronSightReload);
+		bIsRealod = true;
+		
 	}
 }
 
+void AOR_Enemy::EndReload()
+{
+	bIsRealod = false;
+	bHasNeedReload = false;
+	CurrentMunition = MaxMunition;
+}
+
+FVector AOR_Enemy::CheckNavigationPoint(FVector TargetPosition)
+{
+	FVector PathStart = GetActorLocation();
+	UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), PathStart, TargetPosition, NULL);
+
+	if (NavPath->IsValid())
+	{
+		return TargetPosition;
+	}
+	else
+	{
+		float InterSpeed = 100.0;
+		FVector InterpVector = FMath::VInterpTo(TargetPosition, GetActorLocation(), GetWorld()->GetDeltaSeconds(), InterSpeed);
+		return InterpVector;
+	}
+}
+
+
 FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
 {
+	FVector CurrentTargetLocation;
 
 	if (PlayerDistance > 1800)
 	{
-		return LocomotionPoints[0];
+		CurrentTargetLocation=LocomotionPoints[0];
 	}
 
 	if (PlayerDistance >= 800 && PlayerDistance <= 1000)
 	{
-		return GetActorLocation();
+		CurrentTargetLocation=GetActorLocation();
 	}
 
 
@@ -189,15 +322,17 @@ FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
 
 		if (MyYaw< 0 && MyYaw >-20)
 		{
-			return   LocomotionPoints[2];
+
+			CurrentTargetLocation=LocomotionPoints[2];
+		
 		}
 		if (MyYaw < -20 && MyYaw > -40)
 		{
-			return   LocomotionPoints[1];
+			CurrentTargetLocation=LocomotionPoints[1];
 		}
 		if (MyYaw < -40)
 		{
-			return   LocomotionPoints[0];
+			CurrentTargetLocation=LocomotionPoints[0];
 		}
 
 
@@ -205,11 +340,11 @@ FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
 
 		if (MyYaw > 0 && MyYaw < 30)
 		{
-			return   LocomotionPoints[5];
+			CurrentTargetLocation=LocomotionPoints[5];
 		}
 		if (MyYaw > 30)
 		{
-			return   LocomotionPoints[0];
+			CurrentTargetLocation=LocomotionPoints[0];
 		}
 
 	}
@@ -219,15 +354,15 @@ FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
 
 		if (MyYaw > 0 && MyYaw < 20)
 		{
-			return   LocomotionPoints[3];
+			CurrentTargetLocation=LocomotionPoints[3];
 		}
 		if (MyYaw > 20 && MyYaw < 40)
 		{
-			return   LocomotionPoints[4];
+			CurrentTargetLocation=LocomotionPoints[4];
 		}
 		if (MyYaw > 40)
 		{
-			return   LocomotionPoints[5];
+			CurrentTargetLocation=LocomotionPoints[5];
 		}
 
 
@@ -235,17 +370,36 @@ FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
 
 		if (MyYaw < 0 && MyYaw >-30)
 		{
-			return   LocomotionPoints[3];
+			CurrentTargetLocation=LocomotionPoints[3];
 		}
 		if (MyYaw < -30)
 		{
-			return   LocomotionPoints[2];
+			CurrentTargetLocation=LocomotionPoints[2];
 		}
 
 	}
 
+	return CheckNavigationPoint(CurrentTargetLocation);
+}
 
+void AOR_Enemy::UpdateNavegationSystem()
+{
+	LocomotionPoints[0] = LocoPoint0->GetComponentLocation();
+	LocomotionPoints[1] = LocoPoint1->GetComponentLocation();
+	LocomotionPoints[2] = LocoPoint2->GetComponentLocation();
+	LocomotionPoints[3] = LocoPoint3->GetComponentLocation();
+	LocomotionPoints[4] = LocoPoint4->GetComponentLocation();
+	LocomotionPoints[5] = LocoPoint5->GetComponentLocation();
+	LocomotionPoints[6] = LocoPoint6->GetComponentLocation();
+	LocomotionPoints[7] = LocoPoint7->GetComponentLocation();
+}
 
-	return GetActorLocation();
+void AOR_Enemy::HitReact()
+{
+	if (IsValid(HitReactMontage) && IsValid(OwnAnimInstance))
+	{
+		OwnAnimInstance->Montage_Play(HitReactMontage, 1.0f);
+		OwnAnimInstance->Montage_JumpToSection("Default", HitReactMontage);
+	}
 }
 

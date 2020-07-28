@@ -39,7 +39,7 @@ public:
 
 
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -57,17 +57,10 @@ public:
 	FORCEINLINE void SetMyYaw(float value) { MyYaw = value; }
 
 	FORCEINLINE bool GetIsHipsFiring() { return bIsHipsFiring; }
+	FORCEINLINE bool GetIsIronSightFiring() { return bIsIronFiringMoving; }
+	FORCEINLINE bool GetbIsReload() { return bIsRealod; }
 
-	FORCEINLINE bool GetIsIronSightFiring() { return bIsIronSightFiring; }
-	/*
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Main|Enums")
-		ERangeStatus RangeStatus;
 
-	/** Set the New Movement Status
-	FORCEINLINE void SetRangeStatus(ERangeStatus Status) { RangeStatus= Status; }
-
-	/** Get Current Movement Status
-	FORCEINLINE ERangeStatus GetRangeStatus()  const { return RangeStatus; } */
 
 
 
@@ -79,6 +72,8 @@ protected:
 
 	FTimerHandle ShootHipsHandle;
 	FTimerHandle ShootIronHandle;
+	FTimerHandle StopHandle;
+	FTimerHandle UpdateNavegationSystemHandle;
 
 	/** Hip Shoot Montage*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Montages")
@@ -88,14 +83,43 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Montages")
 		UAnimMontage* ShootIronSightMontage;
 
+	/** Reload Montage*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Montages")
+		UAnimMontage* IronSightReload;
+
+	/** Reload Montage*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Montages")
+		UAnimMontage* HitReactMontage;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
 		bool bIsHipsFiring;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
-		bool bIsIronSightFiring;
+		bool bIsIronFiringMoving;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
+		bool bIsIronFiringQuiet;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
+		bool bIsFiring;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
+		bool bHasNeedReload;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
+		bool bIsRealod;
 
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
+		int32 CurrentMunition;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = " Enemy|Variables")
+		int32 MaxMunition;
+
+
+
+	int32 CurrentIndex;
 
 
 
@@ -109,7 +133,7 @@ protected:
 		void StartHipsFire();
 
 	UFUNCTION(BlueprintCallable)
-		void StartIroSightFire();
+		void StartIroSightFire(bool Moving);
 	
 	void Firing();
 
@@ -119,10 +143,27 @@ protected:
 	UFUNCTION(BlueprintCallable)
 		void StopIronFire();
 
+	void StopFiring();
+
+	UFUNCTION(BlueprintCallable)
+	void Shoot();
+
+	UFUNCTION(BlueprintCallable)
+	void StartReload();
+
+	UFUNCTION(BlueprintCallable)
+	void EndReload();
+
+	FVector CheckNavigationPoint(FVector TargetPosition);
+
+
 	UFUNCTION(BlueprintCallable)
 	FVector GetMovementDirection(float PlayerDistance);
 
+	void UpdateNavegationSystem();
 
+	UFUNCTION(BlueprintCallable)
+	void HitReact();
 
 
 

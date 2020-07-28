@@ -13,6 +13,8 @@ UEnemyAnimInstance::UEnemyAnimInstance()
 	Speed = 0.0f;
 	Direction = 0.0f;
 
+	BlendIronSightWeigth = 0.0f;
+
 
 
 }
@@ -52,8 +54,26 @@ void UEnemyAnimInstance::UpdateAnimationPropertys()
 
 	if (IsValid(Owner))
 	{
+		//Pitch Yaw Control
 		Owner->SetMyPitch(OwnPitch);
 		Owner->SetMyYaw(OwnYaw);
+
+		//BlendBoneRatio Control
+		/*if (Owner->GetIsIronSightFiring())
+		{
+			if (BlendIronSightWeigth != 1.0f)
+			{
+				BlendIronSightWeigth = 1.0f;
+			}
+			
+		}
+		else
+		{
+			if (BlendIronSightWeigth != 0.0f)
+			{
+				BlendIronSightWeigth = 0.0f;
+			}	
+		}*/
 	}
 
 }
