@@ -125,6 +125,9 @@ protected:
 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = " Enemy|Variables")
+		float InitialMinDistanceToRun;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = " Enemy|Variables")
 		float MinDistanceToRun;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = " Enemy|Variables")
@@ -178,6 +181,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void HitReact();
+
+	UFUNCTION(BlueprintCallable)
+	void GetProportionalSpeed(float distance);
 
 
 

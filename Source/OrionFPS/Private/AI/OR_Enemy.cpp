@@ -15,7 +15,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
-
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 AOR_Enemy::AOR_Enemy()
@@ -101,6 +101,8 @@ void AOR_Enemy::BeginPlay()
 	MainReference = Cast<AMainCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 
 	GetWorld()->GetTimerManager().SetTimer(UpdateNavegationSystemHandle, this, &AOR_Enemy::UpdateNavegationSystem, 0.05, true, 0.0);
+
+	InitialMinDistanceToRun = MinDistanceToRun;
 }
 
 // Called every frame
@@ -306,7 +308,7 @@ FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
 {
 	FVector CurrentTargetLocation;
 
-	if (PlayerDistance > 1800)
+	if (PlayerDistance > MinDistanceToRun)
 	{
 		if (IsValid(MainReference))
 		{
@@ -316,14 +318,14 @@ FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
 		
 	}
 
-	if (PlayerDistance >= 800 && PlayerDistance <= 1000)
+	if (PlayerDistance >= MinDistanceToStay && PlayerDistance <= MaxDistanceToStay)
 	{
 		CurrentTargetLocation=GetActorLocation();
 		return CurrentTargetLocation;
 	}
 
 
-	if (PlayerDistance > 1000)
+	if (PlayerDistance > MaxDistanceToStay)
 	{
 		// Left Side Locomotion
 
@@ -411,6 +413,26 @@ void AOR_Enemy::HitReact()
 	{
 		OwnAnimInstance->Montage_Play(HitReactMontage, 1.0f);
 		OwnAnimInstance->Montage_JumpToSection("Default", HitReactMontage);
+	}
+}
+
+void AOR_Enemy::GetProportionalSpeed(float distance)
+{
+	if (distance > MinDistanceToRun)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 400;
+		return;
+	}
+	if (distance > MaxDistanceToStay)
+	{
+		float TempMax = MinDistanceToRun - MaxDistanceToStay;
+
+		GetCharacterMovement()->MaxWalkSpeed = 200 + ((distance - MaxDistanceToStay) * 100) / TempMax;
+	}
+
+	if (distance < MinDistanceToStay)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 250;
 	}
 }
 
