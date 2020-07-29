@@ -12,6 +12,7 @@ class USkeletalMeshComponent;
 class UAnimMontage;
 class UAnimInstance;
 class UParticleSystem;
+class AMainCharacter;
 class USphereComponent;
 
 ////// Movement Enum States //////
@@ -92,6 +93,11 @@ protected:
 		UAnimMontage* HitReactMontage;
 
 
+	/** Reload Montage*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Montages")
+		AMainCharacter* MainReference;
+
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
 		bool bIsHipsFiring;
 
@@ -118,6 +124,14 @@ protected:
 		int32 MaxMunition;
 
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = " Enemy|Variables")
+		float MinDistanceToRun;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = " Enemy|Variables")
+		float MaxDistanceToStay;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = " Enemy|Variables")
+		float MinDistanceToStay;
 
 	int32 CurrentIndex;
 

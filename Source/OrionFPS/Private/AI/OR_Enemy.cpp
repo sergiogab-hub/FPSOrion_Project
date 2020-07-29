@@ -69,7 +69,7 @@ AOR_Enemy::AOR_Enemy()
 
 	bHasNeedReload = false;
 	bIsRealod = false;
-	MaxMunition = 5;
+	MaxMunition = 25;
 	CurrentIndex = 0;
 
 }
@@ -98,8 +98,9 @@ void AOR_Enemy::BeginPlay()
 
 	CurrentMunition = MaxMunition;
 
+	MainReference = Cast<AMainCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 
-	GetWorld()->GetTimerManager().SetTimer(UpdateNavegationSystemHandle, this, &AOR_Enemy::UpdateNavegationSystem, 0.1, true, 0.0);
+	GetWorld()->GetTimerManager().SetTimer(UpdateNavegationSystemHandle, this, &AOR_Enemy::UpdateNavegationSystem, 0.05, true, 0.0);
 }
 
 // Called every frame
@@ -229,14 +230,14 @@ void AOR_Enemy::Shoot()
 
 	if (bIsIronFiringMoving)
 	{
-		shakevector.X = FMath::RandRange(FMath::RandRange(-60, -20), FMath::RandRange(20, 60));
-		shakevector.Y = 20;
+		shakevector.X = FMath::RandRange(FMath::RandRange(-105, -95), FMath::RandRange(105, 95));
+		shakevector.Y = 100;
 		shakevector.Z = FMath::RandRange(50, 70);
 	}
 	else
 	{
-		shakevector.X = FMath::RandRange(FMath::RandRange(-65, -55), FMath::RandRange(65, 55));
-		shakevector.Y = 20;
+		shakevector.X = FMath::RandRange(FMath::RandRange(-105, -95), FMath::RandRange(105, 95));
+		shakevector.Y = 100;
 		shakevector.Z = FMath::RandRange(50, 70);
 	}
 
@@ -294,12 +295,12 @@ FVector AOR_Enemy::CheckNavigationPoint(FVector TargetPosition)
 	}
 	else
 	{
-		float InterSpeed = 100.0;
+		float InterSpeed = 90.0;
 		FVector InterpVector = FMath::VInterpTo(TargetPosition, GetActorLocation(), GetWorld()->GetDeltaSeconds(), InterSpeed);
 		return InterpVector;
 	}
-}
 
+}
 
 FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
 {
@@ -307,12 +308,18 @@ FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
 
 	if (PlayerDistance > 1800)
 	{
-		CurrentTargetLocation=LocomotionPoints[0];
+		if (IsValid(MainReference))
+		{
+			CurrentTargetLocation = MainReference->GetActorLocation();
+			return CurrentTargetLocation;
+		}
+		
 	}
 
 	if (PlayerDistance >= 800 && PlayerDistance <= 1000)
 	{
 		CurrentTargetLocation=GetActorLocation();
+		return CurrentTargetLocation;
 	}
 
 
@@ -379,8 +386,12 @@ FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
 
 	}
 
+	
 	return CheckNavigationPoint(CurrentTargetLocation);
 }
+
+
+
 
 void AOR_Enemy::UpdateNavegationSystem()
 {
