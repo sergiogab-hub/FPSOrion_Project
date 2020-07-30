@@ -136,6 +136,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = " Enemy|Variables")
 		float MinDistanceToStay;
 
+
 	int32 CurrentIndex;
 
 
