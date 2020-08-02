@@ -59,6 +59,7 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	{
 		if (ImpactParticlesStone && ImpactParticlesSmokeStone && ImpactParticlesEnemy && ImpactParticlesSmokeEnemy)
 		{
+
 			if (IsValid(MainCharacter))
 			{			
 				if (IsValid(Hit.GetActor()))
@@ -66,13 +67,15 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 					FRotator RotationImpact = UKismetMathLibrary::FindLookAtRotation(Hit.Location, MainCharacter->GetActorLocation());
 
 					AOR_Enemy* Enemy = Cast<AOR_Enemy>(Hit.GetActor());
+					
+				
 
                     if(IsValid(Enemy))
 					{
 						UGameplayStatics::ApplyPointDamage(Hit.GetActor(), Damage, MainCharacter->GetActorRotation().Vector(), Hit, MainCharacter->GetInstigatorController(), this, DamageType);
 
 						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesEnemy, Hit.Location, RotationImpact, FVector(0.4f), true);//0.4
-						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmokeEnemy, Hit.Location, RotationImpact, FVector(0.2f), true);//0.2
+						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticlesSmokeEnemy, Hit.Location, RotationImpact, FVector(0.1f), true);//0.2
 					}
 					else
 					{

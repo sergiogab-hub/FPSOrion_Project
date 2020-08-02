@@ -68,6 +68,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 		UParticleSystem* ImpactParticlesSmokeEnemy;
 
+	/** Blood Particle System */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+		UParticleSystem* BloodSystem;
+
 	               //////////// Damage//////////////
 
 	/** Damage Type */

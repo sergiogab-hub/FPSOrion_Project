@@ -75,4 +75,9 @@ protected:
     /** Hit Functions */
 	UFUNCTION()
 		void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+
+	/** RadialForceFunction */
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Projectile")
+		void BP_SpawnRadialForce();
 };

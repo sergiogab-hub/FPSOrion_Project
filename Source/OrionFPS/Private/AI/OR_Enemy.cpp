@@ -4,7 +4,7 @@
 #include "AI/OR_Enemy.h"
 #include "AI/EnemyAnimInstance.h"
 #include "Character/OR_MainCharacter.h"
-
+#include "Projectiles/OR_BulletProjectile.h"
 
 #include "Engine/World.h"
 #include "TimerManager.h"
@@ -224,8 +224,22 @@ void AOR_Enemy::Shoot()
 		bHasNeedReload = true;
 		return;
 	}
+	if (IsValid(BulletClass))
+	{
+		/*Get Socket Transforms*/
+		FVector MuzzleLocation = Weapon->GetSocketLocation("muzzlee");
+		FRotator MuzzleRotation = Weapon->GetSocketRotation("muzzlee");
+		MuzzleRotation.Pitch = MuzzleRotation.Pitch + FMath::RandRange(-1, 1);
+		MuzzleRotation.Yaw = MuzzleRotation.Yaw + FMath::RandRange(-5 , 0);
+	
 
-	FHitResult Hit;
+		/*Spawn Projectile*/
+		AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(BulletClass, MuzzleLocation, MuzzleRotation);
+
+		BP_Shoot();
+	}
+
+	/*FHitResult Hit;
 	FVector MuzzleSocket = Weapon->GetSocketLocation("MuzzleSocket");
 
 	FVector shakevector;     //	Dispersion de la balas con el rango que le mando del Shootimer2
@@ -249,13 +263,15 @@ void AOR_Enemy::Shoot()
 	if (IsValid(Main))
 	{
 		GetWorld()->LineTraceSingleByChannel(Hit, MuzzleSocket, Main->GetActorLocation() + shakevector, ECC_GameTraceChannel8);
-		DrawDebugLine(GetWorld(),
+		/*DrawDebugLine(GetWorld(),
 			MuzzleSocket,
 			Main->GetActorLocation() + shakevector,
 			FColor::Red,
 			false,
-			10);
+			3);
 	}
+
+	BP_Shoot(Hit.TraceEnd);
 
 	if (IsValid(Hit.GetActor()))
 	{
@@ -264,6 +280,7 @@ void AOR_Enemy::Shoot()
 			UGameplayStatics::ApplyPointDamage(Hit.GetActor(), 4, Hit.Location, Hit, this->GetInstigatorController(), this, nullptr);
 		}
 	}
+	*/
 
 	CurrentMunition--;
 }

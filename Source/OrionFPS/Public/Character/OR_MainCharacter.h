@@ -293,6 +293,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Main|Pilars")
 		TSubclassOf<AOR_BasePilar> MyPilarsReference;
 
+	/** Damage Type */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Main|CharacterPropertys")
+		TSubclassOf<UDamageType> MyDamageType;
+
 
 protected:
 	////////////////////////////////////////////////////////////////////
@@ -752,11 +756,15 @@ public:
 		void BP_EndDefenceUltimate();
 
 
-	             /////////////Death State BP Functions /////////////////
+	             /////////////Death / Damage State BP Functions /////////////////
 
 	/**Deast*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_MovementEvents")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_DamageEvent")
 		void BP_Death();
+
+	/**Deast*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Main | BP_DamageEvent")
+		void BP_ReceiveDamage();
 
 
 

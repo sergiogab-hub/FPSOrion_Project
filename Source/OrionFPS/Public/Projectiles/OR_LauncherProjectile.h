@@ -100,6 +100,10 @@ protected:
 	UFUNCTION()
 		void DetonateMyGrenade();
 
+	/** RadialForceFunction */
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Projectile")
+		void BP_SpawnRadialForce();
+
 
 	
 

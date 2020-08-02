@@ -474,9 +474,10 @@ void AMainCharacter::SetEnumMeleeCollision(ECollisionEnabled::Type CollisionStat
 
 void AMainCharacter::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (IsValid(OtherActor))
+	if (IsValid(OtherActor)&& IsValid(MyDamageType))
 	{
-		UGameplayStatics::ApplyPointDamage(OtherActor, 20.f, SweepResult.Location, SweepResult, GetInstigatorController(), this, nullptr);
+		
+		UGameplayStatics::ApplyPointDamage(OtherActor, 20.f, SweepResult.Location, SweepResult, GetInstigatorController(), this, MyDamageType);
 	}
 }
 
@@ -755,6 +756,9 @@ void AMainCharacter::UltimateCountingDuration()
 ///////////////////////// One Heatl Change Delegate ///////////////////
 void AMainCharacter::OnHealthChange(UOR_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
+	BP_ReceiveDamage();
+
+
 	if (CurrentHealthComponent->GetIsDead())
 	{
 		if (IsValid(GameModeReference))
@@ -765,6 +769,7 @@ void AMainCharacter::OnHealthChange(UOR_HealthComponent* CurrentHealthComponent,
 		}
 		
 	}
+
 }
 
 

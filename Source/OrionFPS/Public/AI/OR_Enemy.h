@@ -14,6 +14,7 @@ class UAnimInstance;
 class UParticleSystem;
 class AMainCharacter;
 class USphereComponent;
+class AProjectile;
 
 ////// Movement Enum States //////
 /*
@@ -66,6 +67,10 @@ public:
 
 
 protected:
+
+	/** Projectile class to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Projectiles")
+		TSubclassOf<AProjectile> BulletClass;
 
 	/** Anim Instance */
 	UPROPERTY(BlueprintReadOnly, Category = "Enemy|References")
@@ -166,6 +171,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void Shoot();
 
+	UFUNCTION(BlueprintImplementableEvent , BlueprintCallable)
+		void BP_Shoot();
+
 	UFUNCTION(BlueprintCallable)
 	void StartReload();
 
@@ -195,6 +203,8 @@ protected:
 	//   Character Class
 	//
 	////////////////////////////////////////////////////////////////////
+
+
 
 		/** Weapon Skeletal Mesh for Player*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponents")

@@ -96,6 +96,7 @@ void AOR_LauncherProjectile::DetonateMyGrenade()
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Explosion, GetActorLocation(), FRotator::ZeroRotator, FVector(1.2f), true);//0.4*/
 			UGameplayStatics::ApplyRadialDamage(GetWorld(), GrenadeBaseDamage, GetActorLocation(), ExplotionRadiusDamage, nullptr, ExplotionExceptions, this, MainCharacter->GetInstigatorController());
+			BP_SpawnRadialForce();
 		}
 	}
 
