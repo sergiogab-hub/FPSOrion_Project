@@ -69,7 +69,7 @@ AOR_Enemy::AOR_Enemy()
 
 	bHasNeedReload = false;
 	bIsRealod = false;
-	MaxMunition = 25;
+	MaxMunition = 7;
 	CurrentIndex = 0;
 
 }
