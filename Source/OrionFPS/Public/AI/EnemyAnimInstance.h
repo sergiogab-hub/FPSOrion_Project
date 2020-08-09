@@ -28,6 +28,7 @@ public:
 
 
 	FORCEINLINE void SetIsIronSigth(bool value) { bIsIronSight = value; }
+	FORCEINLINE void SetBlendIronSightWeigth(float value) { BlendIronSightWeigth = value; }
 
 protected:
 

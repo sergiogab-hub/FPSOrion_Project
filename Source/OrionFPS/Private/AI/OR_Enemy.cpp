@@ -5,16 +5,19 @@
 #include "AI/EnemyAnimInstance.h"
 #include "Character/OR_MainCharacter.h"
 #include "Projectiles/OR_BulletProjectile.h"
+#include "Components/OR_HealthComponent.h"
+#include "AI/OR_AIBaseEnemyController.h"
+#include "DamageTypes/MeleeDamageType.h"
 
 #include "Engine/World.h"
 #include "TimerManager.h"
-#include "Animation/AnimInstance.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "Components/SphereComponent.h"
-#include "DrawDebugHelpers.h"
-#include "Kismet/GameplayStatics.h"
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
+#include "DrawDebugHelpers.h"
+#include "Animation/AnimInstance.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/SphereComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
@@ -23,10 +26,12 @@ AOR_Enemy::AOR_Enemy()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Player Camera Component
+	// Weapon AI Component
+
 	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
 	Weapon->SetupAttachment(GetMesh(), "WeaponSocket");
 
+	// Locomotion Navigation points 
 
 	LocoPoint0 = CreateDefaultSubobject<USphereComponent>(TEXT("LocoPoint0"));
 	LocoPoint0->SetupAttachment(GetRootComponent());
@@ -62,28 +67,38 @@ AOR_Enemy::AOR_Enemy()
 	LocoPoint7->SetupAttachment(GetRootComponent());
 	LocoPoint7->InitSphereRadius(15.f);
 
+
+	//HealthComponent
+	Health = CreateDefaultSubobject<UOR_HealthComponent>(TEXT("Health"));
+
+	// Control Combat Variables
 	bIsHipsFiring = false;
 	bIsIronFiringMoving = false;
 	bIsIronFiringQuiet = false;
 	bIsFiring = false;
-
 	bHasNeedReload = false;
 	bIsRealod = false;
+
+
+	//Munition Variables
 	MaxMunition = 7;
 	CurrentIndex = 0;
 
 }
 
-// Called when the game starts or when spawned
+////////////////////////////////////////////////////////////////////
+//
+//   Begin Play
+//
+////////////////////////////////////////////////////////////////////
+
 void AOR_Enemy::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Set AnimInstance
-    OwnAnimInstance = GetMesh()->GetAnimInstance();
+	SetupReferences();
 
-
-	//LocomotionMap
+	//Add Locomotion points to vector
 	LocomotionPoints.Add(LocoPoint0->GetComponentLocation());
 	LocomotionPoints.Add(LocoPoint1->GetComponentLocation());
 	LocomotionPoints.Add(LocoPoint2->GetComponentLocation());
@@ -93,45 +108,254 @@ void AOR_Enemy::BeginPlay()
 	LocomotionPoints.Add(LocoPoint6->GetComponentLocation());
 	LocomotionPoints.Add(LocoPoint7->GetComponentLocation());
 
-
-	EnemyAnimInstance = GetMesh()->GetAnimInstance();
-
+	//Current Munition
 	CurrentMunition = MaxMunition;
 
-	MainReference = Cast<AMainCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	//Distance to run
+	InitialMinDistanceToRun = MinDistanceToRun;
 
+	// HealthDelegate
+	Health->OnHealthChangeDelegate.AddDynamic(this, &AOR_Enemy::OnHealthChange);
+
+	//Navegation System Timer
 	GetWorld()->GetTimerManager().SetTimer(UpdateNavegationSystemHandle, this, &AOR_Enemy::UpdateNavegationSystem, 0.05, true, 0.0);
 
-	InitialMinDistanceToRun = MinDistanceToRun;
 }
 
-// Called every frame
+void AOR_Enemy::SetupReferences()
+{
+	// AnimInstance Reference
+	EnemyAnimInstaceReference = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance());
+
+	// Get player reference
+	MainReference = Cast<AMainCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+
+	//AI Controller Reference
+	OwnController = Cast<AOR_AIBaseEnemyController>(GetController());
+}
+////////////////////////////////////////////////////////////////////
+//
+//   Event Tick 
+//
+////////////////////////////////////////////////////////////////////
+
 void AOR_Enemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-// Called to bind functionality to input
-void AOR_Enemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+
+////////////////////////////////////////////////////////////////////
+//
+//  Character AI Movement 
+//
+////////////////////////////////////////////////////////////////////
+
+// Check if Navigation points is valid  , if  is not , make interpolations to make a valid move.
+FVector AOR_Enemy::CheckNavigationPoint(FVector TargetPosition)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	FVector PathStart = GetActorLocation();
+	UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), PathStart, TargetPosition, NULL);
+
+	if (NavPath->IsValid())
+	{
+		return TargetPosition;
+	}
+	else
+	{
+		float InterSpeed = 90.0;
+		FVector InterpVector = FMath::VInterpTo(TargetPosition, GetActorLocation(), GetWorld()->GetDeltaSeconds(), InterSpeed);
+		return InterpVector;
+	}
 
 }
 
-
-
-
-
-void AOR_Enemy::StartHipsFire()
+// Get AI point to move
+FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
 {
-	if (bIsHipsFiring) { return; }
+	FVector CurrentTargetLocation;
 
-	GetWorld()->GetTimerManager().SetTimer(ShootHipsHandle, this, &AOR_Enemy::Firing, 0.5 , true, 0.0);
-	bIsHipsFiring = true;
+	if (PlayerDistance > MinDistanceToRun)
+	{
+		if (IsValid(MainReference))
+		{
+			CurrentTargetLocation = MainReference->GetActorLocation();
+			return CurrentTargetLocation;
+		}
 
-	
+	}
+
+	if (PlayerDistance >= MinDistanceToStay && PlayerDistance <= MaxDistanceToStay)
+	{
+		CurrentTargetLocation = GetActorLocation();
+		return CurrentTargetLocation;
+	}
+
+
+	if (PlayerDistance > MaxDistanceToStay)
+	{
+		// Left Side Locomotion
+
+		if (MyYaw< 0 && MyYaw >-20)
+		{
+
+			CurrentTargetLocation = LocomotionPoints[2];
+
+		}
+		if (MyYaw < -20 && MyYaw > -40)
+		{
+			CurrentTargetLocation = LocomotionPoints[1];
+		}
+		if (MyYaw < -40)
+		{
+			CurrentTargetLocation = LocomotionPoints[0];
+		}
+
+
+		// Righ Side Locomotion
+
+		if (MyYaw > 0 && MyYaw < 30)
+		{
+			CurrentTargetLocation = LocomotionPoints[5];
+		}
+		if (MyYaw > 30)
+		{
+			CurrentTargetLocation = LocomotionPoints[0];
+		}
+
+	}
+	else
+	{
+		// Left Side Locomotion (Inverse)
+
+		if (MyYaw > 0 && MyYaw < 20)
+		{
+			CurrentTargetLocation = LocomotionPoints[3];
+		}
+		if (MyYaw > 20 && MyYaw < 40)
+		{
+			CurrentTargetLocation = LocomotionPoints[4];
+		}
+		if (MyYaw > 40)
+		{
+			CurrentTargetLocation = LocomotionPoints[5];
+		}
+
+
+		// Righ Side Locomotion
+
+		if (MyYaw < 0 && MyYaw >-30)
+		{
+			CurrentTargetLocation = LocomotionPoints[3];
+		}
+		if (MyYaw < -30)
+		{
+			CurrentTargetLocation = LocomotionPoints[2];
+		}
+
+	}
+
+
+	return CheckNavigationPoint(CurrentTargetLocation);
 }
+
+
+//Delegate
+
+void AOR_Enemy::OnHealthChange(UOR_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (DamageType)
+	{
+		const UMeleeDamageType* MeleeDamage = Cast<UMeleeDamageType>(DamageType);
+		{
+			if (MeleeDamage)
+			{
+				OwnController->UnPossess();
+				BP_Death();
+				EnemyAnimInstaceReference->SetBlendIronSightWeigth(1.0f);
+				EnemyAnimInstaceReference->Montage_Play(DeathMontage, 1.0f);
+				EnemyAnimInstaceReference->Montage_JumpToSection("Slot6", DeathMontage);
+				AddActorLocalOffset(FVector(-120.0f, 0.0f, 0.0f));
+				return;
+			}
+		}
+
+		
+	}
+
+
+	if (IsValid(DamageCauser))
+	{
+		AProjectile* Bullet = Cast<AProjectile>(DamageCauser);
+
+		if (IsValid(Bullet))
+		{
+		
+			if (CurrentHealthComponent->GetIsDead())
+			{
+				if (IsValid(OwnController)&& DeathMontage)
+				{
+					OwnController->UnPossess();
+					PlayMontageDeathAnimation();
+					StopIronFire();
+					BP_Death();
+				}
+			}
+		}
+		else
+		{
+			OwnController->UnPossess();
+			StopIronFire();
+			GetMesh()->SetCollisionProfileName("Pawn");
+			GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_PhysicsBody);
+			GetMesh()->SetSimulatePhysics(true);
+			BP_Death();
+			
+		}
+	}
+}
+
+//Update Locomotions Navigations potition
+void AOR_Enemy::UpdateNavegationSystem()
+{
+	LocomotionPoints[0] = LocoPoint0->GetComponentLocation();
+	LocomotionPoints[1] = LocoPoint1->GetComponentLocation();
+	LocomotionPoints[2] = LocoPoint2->GetComponentLocation();
+	LocomotionPoints[3] = LocoPoint3->GetComponentLocation();
+	LocomotionPoints[4] = LocoPoint4->GetComponentLocation();
+	LocomotionPoints[5] = LocoPoint5->GetComponentLocation();
+	LocomotionPoints[6] = LocoPoint6->GetComponentLocation();
+	LocomotionPoints[7] = LocoPoint7->GetComponentLocation();
+}
+
+// AI Speed proportional to Player position
+void AOR_Enemy::GetProportionalSpeed(float distance)
+{
+	if (distance > MinDistanceToRun)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 400;
+		return;
+	}
+	if (distance > MaxDistanceToStay)
+	{
+		float TempMax = MinDistanceToRun - MaxDistanceToStay;
+
+		GetCharacterMovement()->MaxWalkSpeed = 200 + ((distance - MaxDistanceToStay) * 100) / TempMax;
+	}
+
+	if (distance < MinDistanceToStay)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 250;
+	}
+}
+
+
+////////////////////////////////////////////////////////////////////
+//
+//  Character Combat 
+//
+////////////////////////////////////////////////////////////////////
 
 void AOR_Enemy::StartIroSightFire(bool Moving)
 {
@@ -147,23 +371,20 @@ void AOR_Enemy::StartIroSightFire(bool Moving)
 		GetWorld()->GetTimerManager().SetTimer(ShootIronHandle, this, &AOR_Enemy::Shoot, 1.0, true, 1.0);
 		bIsIronFiringMoving = true;
 	}
-	
-
-
-	
+		
 }
 
 void AOR_Enemy::Firing()
 {
-	if (IsValid(OwnAnimInstance))
+	if (IsValid(EnemyAnimInstaceReference))
 	{
 
 	  if (ShootHipsMontage && ShootIronSightMontage)
 		{
 			if (bIsHipsFiring)
 			{
-				OwnAnimInstance->Montage_Play(ShootHipsMontage, 1.0f);
-				OwnAnimInstance->Montage_JumpToSection("Default", ShootHipsMontage);
+				EnemyAnimInstaceReference->Montage_Play(ShootHipsMontage, 1.0f);
+				EnemyAnimInstaceReference->Montage_JumpToSection("Default", ShootHipsMontage);
 			}
 			else
 			{
@@ -175,24 +396,14 @@ void AOR_Enemy::Firing()
 				}
 				else
 				{
-					OwnAnimInstance->Montage_Play(ShootIronSightMontage, 1.0f);
-					OwnAnimInstance->Montage_JumpToSection("Default", ShootIronSightMontage);
+					EnemyAnimInstaceReference->Montage_Play(ShootIronSightMontage, 1.0f);
+					EnemyAnimInstaceReference->Montage_JumpToSection("Default", ShootIronSightMontage);
 					CurrentMunition--;
 				}
 				
 			}
 		}
 	  
-	}
-
-}
-
-void AOR_Enemy::StopHipsFire()
-{
-	if (bIsHipsFiring)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(ShootHipsHandle);
-		bIsHipsFiring = false;
 	}
 
 }
@@ -217,6 +428,46 @@ void AOR_Enemy::StopFiring()
 	bIsFiring = false;
 }
 
+void AOR_Enemy::PlayMontageDeathAnimation()
+{
+	if (IsValid(EnemyAnimInstaceReference))
+	{
+		EnemyAnimInstaceReference->SetBlendIronSightWeigth(1.0f);
+
+		int32 Section = FMath::RandRange(1, 5);
+		switch (Section)
+		{
+		case 1:
+			EnemyAnimInstaceReference->Montage_Play(DeathMontage, 1.0);
+			EnemyAnimInstaceReference->Montage_JumpToSection("Slot1", DeathMontage);
+			break;
+		case 2:
+			EnemyAnimInstaceReference->Montage_Play(DeathMontage, 1.0);
+			EnemyAnimInstaceReference->Montage_JumpToSection("Slot2", DeathMontage);
+		
+			break;
+		case 3:
+			EnemyAnimInstaceReference->Montage_Play(DeathMontage, 1.0);
+			EnemyAnimInstaceReference->Montage_JumpToSection("Slot3", DeathMontage);
+		
+			break;
+		case 4:
+			EnemyAnimInstaceReference->Montage_Play(DeathMontage, 1.0);
+			EnemyAnimInstaceReference->Montage_JumpToSection("Slot4", DeathMontage);
+
+			break;
+		case 5:
+			EnemyAnimInstaceReference->Montage_Play(DeathMontage, 1.0);
+			EnemyAnimInstaceReference->Montage_JumpToSection("Slot5", DeathMontage);
+		
+			break;
+		default:
+			break;
+		}
+	}
+
+}
+
 void AOR_Enemy::Shoot()
 {
 	if (CurrentMunition <= 0)
@@ -239,58 +490,15 @@ void AOR_Enemy::Shoot()
 		BP_Shoot();
 	}
 
-	/*FHitResult Hit;
-	FVector MuzzleSocket = Weapon->GetSocketLocation("MuzzleSocket");
-
-	FVector shakevector;     //	Dispersion de la balas con el rango que le mando del Shootimer2
-
-	if (bIsIronFiringMoving)
-	{
-		shakevector.X = FMath::RandRange(FMath::RandRange(-105, -95), FMath::RandRange(105, 95));
-		shakevector.Y = 100;
-		shakevector.Z = FMath::RandRange(50, 70);
-	}
-	else
-	{
-		shakevector.X = FMath::RandRange(FMath::RandRange(-105, -95), FMath::RandRange(105, 95));
-		shakevector.Y = 100;
-		shakevector.Z = FMath::RandRange(50, 70);
-	}
-
-
-	AMainCharacter* Main = Cast<AMainCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld() ,0));
-
-	if (IsValid(Main))
-	{
-		GetWorld()->LineTraceSingleByChannel(Hit, MuzzleSocket, Main->GetActorLocation() + shakevector, ECC_GameTraceChannel8);
-		/*DrawDebugLine(GetWorld(),
-			MuzzleSocket,
-			Main->GetActorLocation() + shakevector,
-			FColor::Red,
-			false,
-			3);
-	}
-
-	BP_Shoot(Hit.TraceEnd);
-
-	if (IsValid(Hit.GetActor()))
-	{
-		if (Main == Hit.GetActor())
-		{
-			UGameplayStatics::ApplyPointDamage(Hit.GetActor(), 4, Hit.Location, Hit, this->GetInstigatorController(), this, nullptr);
-		}
-	}
-	*/
-
 	CurrentMunition--;
 }
 
 void AOR_Enemy::StartReload()
 {
-	if (IsValid(IronSightReload) && IsValid(OwnAnimInstance))
+	if (IsValid(IronSightReload) && IsValid(EnemyAnimInstaceReference))
 	{
-		OwnAnimInstance->Montage_Play(IronSightReload, 1.0f);
-		OwnAnimInstance->Montage_JumpToSection("Default", IronSightReload);
+		EnemyAnimInstaceReference->Montage_Play(IronSightReload, 1.0f);
+		EnemyAnimInstaceReference->Montage_JumpToSection("Default", IronSightReload);
 		bIsRealod = true;
 		
 	}
@@ -303,153 +511,12 @@ void AOR_Enemy::EndReload()
 	CurrentMunition = MaxMunition;
 }
 
-FVector AOR_Enemy::CheckNavigationPoint(FVector TargetPosition)
-{
-	FVector PathStart = GetActorLocation();
-	UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), PathStart, TargetPosition, NULL);
-
-	if (NavPath->IsValid())
-	{
-		return TargetPosition;
-	}
-	else
-	{
-		float InterSpeed = 90.0;
-		FVector InterpVector = FMath::VInterpTo(TargetPosition, GetActorLocation(), GetWorld()->GetDeltaSeconds(), InterSpeed);
-		return InterpVector;
-	}
-
-}
-
-FVector AOR_Enemy::GetMovementDirection(float PlayerDistance)
-{
-	FVector CurrentTargetLocation;
-
-	if (PlayerDistance > MinDistanceToRun)
-	{
-		if (IsValid(MainReference))
-		{
-			CurrentTargetLocation = MainReference->GetActorLocation();
-			return CurrentTargetLocation;
-		}
-		
-	}
-
-	if (PlayerDistance >= MinDistanceToStay && PlayerDistance <= MaxDistanceToStay)
-	{
-		CurrentTargetLocation=GetActorLocation();
-		return CurrentTargetLocation;
-	}
-
-
-	if (PlayerDistance > MaxDistanceToStay)
-	{
-		// Left Side Locomotion
-
-		if (MyYaw< 0 && MyYaw >-20)
-		{
-
-			CurrentTargetLocation=LocomotionPoints[2];
-		
-		}
-		if (MyYaw < -20 && MyYaw > -40)
-		{
-			CurrentTargetLocation=LocomotionPoints[1];
-		}
-		if (MyYaw < -40)
-		{
-			CurrentTargetLocation=LocomotionPoints[0];
-		}
-
-
-		// Righ Side Locomotion
-
-		if (MyYaw > 0 && MyYaw < 30)
-		{
-			CurrentTargetLocation=LocomotionPoints[5];
-		}
-		if (MyYaw > 30)
-		{
-			CurrentTargetLocation=LocomotionPoints[0];
-		}
-
-	}
-	else
-	{
-		// Left Side Locomotion (Inverse)
-
-		if (MyYaw > 0 && MyYaw < 20)
-		{
-			CurrentTargetLocation=LocomotionPoints[3];
-		}
-		if (MyYaw > 20 && MyYaw < 40)
-		{
-			CurrentTargetLocation=LocomotionPoints[4];
-		}
-		if (MyYaw > 40)
-		{
-			CurrentTargetLocation=LocomotionPoints[5];
-		}
-
-
-		// Righ Side Locomotion
-
-		if (MyYaw < 0 && MyYaw >-30)
-		{
-			CurrentTargetLocation=LocomotionPoints[3];
-		}
-		if (MyYaw < -30)
-		{
-			CurrentTargetLocation=LocomotionPoints[2];
-		}
-
-	}
-
-	
-	return CheckNavigationPoint(CurrentTargetLocation);
-}
-
-
-
-
-void AOR_Enemy::UpdateNavegationSystem()
-{
-	LocomotionPoints[0] = LocoPoint0->GetComponentLocation();
-	LocomotionPoints[1] = LocoPoint1->GetComponentLocation();
-	LocomotionPoints[2] = LocoPoint2->GetComponentLocation();
-	LocomotionPoints[3] = LocoPoint3->GetComponentLocation();
-	LocomotionPoints[4] = LocoPoint4->GetComponentLocation();
-	LocomotionPoints[5] = LocoPoint5->GetComponentLocation();
-	LocomotionPoints[6] = LocoPoint6->GetComponentLocation();
-	LocomotionPoints[7] = LocoPoint7->GetComponentLocation();
-}
 
 void AOR_Enemy::HitReact()
 {
-	if (IsValid(HitReactMontage) && IsValid(OwnAnimInstance))
+	if (IsValid(HitReactMontage) && IsValid(EnemyAnimInstaceReference))
 	{
-		OwnAnimInstance->Montage_Play(HitReactMontage, 1.0f);
-		OwnAnimInstance->Montage_JumpToSection("Default", HitReactMontage);
+		EnemyAnimInstaceReference->Montage_Play(HitReactMontage, 1.0f);
+		EnemyAnimInstaceReference->Montage_JumpToSection("Default", HitReactMontage);
 	}
 }
-
-void AOR_Enemy::GetProportionalSpeed(float distance)
-{
-	if (distance > MinDistanceToRun)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = 400;
-		return;
-	}
-	if (distance > MaxDistanceToStay)
-	{
-		float TempMax = MinDistanceToRun - MaxDistanceToStay;
-
-		GetCharacterMovement()->MaxWalkSpeed = 200 + ((distance - MaxDistanceToStay) * 100) / TempMax;
-	}
-
-	if (distance < MinDistanceToStay)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = 250;
-	}
-}
-

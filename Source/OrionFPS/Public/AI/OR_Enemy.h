@@ -12,23 +12,14 @@ class USkeletalMeshComponent;
 class UAnimMontage;
 class UAnimInstance;
 class UParticleSystem;
-class AMainCharacter;
 class USphereComponent;
+
+/*MyCLASS*/
+class AMainCharacter;
 class AProjectile;
+class AOR_AIBaseEnemyController;
+class UEnemyAnimInstance;
 
-////// Movement Enum States //////
-/*
-UENUM(BlueprintType)
-enum class ERangeStatus :uint8
-{
-	EMS_RunRange UMETA(DisplayName = "RunRange"),
-	EMS_FireHipsRange UMETA(DisplayName = "FireHipsRange"),
-	EMS_IronSightRange UMETA(DisplayName = "IronSightRange"),
-
-	EMS_MAX UMETA(DisplayName = "DefaultMAX")
-
-};
-*/
 
 UCLASS()
 class ORIONFPS_API AOR_Enemy : public ACharacter
@@ -39,49 +30,82 @@ public:
 	// Sets default values for this character's properties
 	AOR_Enemy();
 
-
-
-public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-
-
-
-	/** Anim Instance */
-	UPROPERTY(BlueprintReadOnly, Category = "Main|References")
-		class UAnimInstance* EnemyAnimInstance;
-
-	FORCEINLINE void SetMyPitch(float value) { MyPitch = value; }
-	FORCEINLINE void SetMyYaw(float value) { MyYaw = value; }
-
-	FORCEINLINE bool GetIsHipsFiring() { return bIsHipsFiring; }
-	FORCEINLINE bool GetIsIronSightFiring() { return bIsIronFiringMoving; }
-	FORCEINLINE bool GetbIsReload() { return bIsRealod; }
-
-
-
 
 
 protected:
 
-	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Projectiles")
-		TSubclassOf<AProjectile> BulletClass;
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 
-	/** Anim Instance */
-	UPROPERTY(BlueprintReadOnly, Category = "Enemy|References")
-		UAnimInstance* OwnAnimInstance;
 
-	FTimerHandle ShootHipsHandle;
-	FTimerHandle ShootIronHandle;
-	FTimerHandle StopHandle;
-	FTimerHandle UpdateNavegationSystemHandle;
+protected:
+	////////////////////////////////////////////////////////////////////
+	//
+	//   Character Class
+	//
+	////////////////////////////////////////////////////////////////////
 
-	/** Hip Shoot Montage*/
+					   //////// Character Components///////
+
+		/** Weapon Skeletal Mesh for Player*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponents")
+		USkeletalMeshComponent* Weapon;
+
+	/** Health Component*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponents")
+		UOR_HealthComponent* Health;
+
+	//////// Navigation AI points ///////
+
+/** Locomotion Point 0 -> Front */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+		USphereComponent* LocoPoint0;
+
+	/** Locomotion Point 1 -> Diagonal Right */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+		USphereComponent* LocoPoint1;
+
+	/** Locomotion Point 2 -> Right Side*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+		USphereComponent* LocoPoint2;
+
+	/** Locomotion Point 3 -> Behind*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+		USphereComponent* LocoPoint3;
+
+	/** Locomotion Point 0 -> Diagonal left*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+		USphereComponent* LocoPoint4;
+
+	/** Locomotion Point 0 -> Left Side */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+		USphereComponent* LocoPoint5;
+
+	/** Locomotion Point 0 -> Diagonal*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+		USphereComponent* LocoPoint6;
+
+	/** Locomotion Point 0 -> Diagonal*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+		USphereComponent* LocoPoint7;
+
+	/** Navigation Points Array*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
+		TArray <FVector> LocomotionPoints;
+
+	/** Character Pitch*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+		float MyPitch;
+
+	/** Character Yaw*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+		float MyYaw;
+
+	//////// Montages ///////
+
+/** Hip Shoot Montage*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Montages")
 		UAnimMontage* ShootHipsMontage;
 
@@ -97,154 +121,188 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Montages")
 		UAnimMontage* HitReactMontage;
 
+	/** Death Montage*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Montages")
+		UAnimMontage* DeathMontage;
+
+	///// References //////
+
+   /** Projectile class to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Projectiles")
+		TSubclassOf<AProjectile> BulletClass;
 
 	/** Reload Montage*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Montages")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|References")
 		AMainCharacter* MainReference;
 
+	/** AIBaseEnemyController*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|References")
+		AOR_AIBaseEnemyController* OwnController;
 
+	/** AnimInstance*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|References")
+		UEnemyAnimInstance* EnemyAnimInstaceReference;
+
+public:
+
+	////////////////////////////////////////////////////////////////////
+	//
+	//   Getter /Setter 
+	//
+	////////////////////////////////////////////////////////////////////
+
+	/** Pitch - Yaw */
+	FORCEINLINE void SetMyPitch(float value) { MyPitch = value; }
+	FORCEINLINE void SetMyYaw(float value) { MyYaw = value; }
+
+	/** Fire-ReloadStates */
+	FORCEINLINE bool GetIsHipsFiring() { return bIsHipsFiring; }
+	FORCEINLINE bool GetIsIronSightFiring() { return bIsIronFiringMoving; }
+	FORCEINLINE bool GetbIsReload() { return bIsRealod; }
+
+
+protected:
+
+	////////////////////////////////////////////////////////////////////
+	//
+	//    AI  Character Variables
+	//
+	////////////////////////////////////////////////////////////////////
+
+	/** HIPS Firing State */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
 		bool bIsHipsFiring;
 
+	/** Iron Firing State Moving */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
 		bool bIsIronFiringMoving;
 
+	/** Iron Firing State Not Moving */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
 		bool bIsIronFiringQuiet;
 
+	/** Is Firin State */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
 		bool bIsFiring;
 
+	/** Has to reload state */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
 		bool bHasNeedReload;
 
+	/** On Reload State */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
 		bool bIsRealod;
 
-
+	/** Current Munition */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
 		int32 CurrentMunition;
 
+	/** Max Munition */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = " Enemy|Variables")
 		int32 MaxMunition;
 
 
+	/** Initial Min DIntance to Run */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = " Enemy|Variables")
 		float InitialMinDistanceToRun;
 
+	/** Current Min DIntance to Run */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = " Enemy|Variables")
 		float MinDistanceToRun;
 
+	/** Max Distance to Stay */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = " Enemy|Variables")
 		float MaxDistanceToStay;
 
+	/** MinDistancetoStay */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = " Enemy|Variables")
 		float MinDistanceToStay;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = " Enemy|Variables")
+		int32 CurrentIndex; //Temporal Not Use
 
-	int32 CurrentIndex;
+		/*Handles*/
+	FTimerHandle ShootHipsHandle;
+	FTimerHandle ShootIronHandle;
+	FTimerHandle UpdateNavegationSystemHandle;
 
 
 
 protected:
 
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	////////////////////////////////////////////////////////////////////
+	//
+	//  AI Character Functions
+	//
+	////////////////////////////////////////////////////////////////////
 
-
-	UFUNCTION(BlueprintCallable)
-		void StartHipsFire();
-
+	/*Start Fire with IronSights*/
 	UFUNCTION(BlueprintCallable)
 		void StartIroSightFire(bool Moving);
-	
-	void Firing();
 
-	UFUNCTION(BlueprintCallable)
-	    void StopHipsFire();
-
+	/*Stop Iron Fire*/
 	UFUNCTION(BlueprintCallable)
 		void StopIronFire();
 
-	void StopFiring();
-
+	/*Shoot Spawn proyectile called by Anim notificy*/
 	UFUNCTION(BlueprintCallable)
-	void Shoot();
+		void Shoot();
 
-	UFUNCTION(BlueprintImplementableEvent , BlueprintCallable)
+	/*Shoot BP Function*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 		void BP_Shoot();
 
+	/*Start Reload*/
 	UFUNCTION(BlueprintCallable)
-	void StartReload();
+		void StartReload();
 
+	/* Start end Reload */
 	UFUNCTION(BlueprintCallable)
-	void EndReload();
+		void EndReload();
 
+	/*Hit React */  //Temporal not use
+	UFUNCTION(BlueprintCallable)
+		void HitReact();
+
+	/* Get Navigation point to move */
+	UFUNCTION(BlueprintCallable)
+		FVector GetMovementDirection(float PlayerDistance);
+
+	/*Proporcional speed to movement */
+	UFUNCTION(BlueprintCallable)
+		void GetProportionalSpeed(float distance);
+
+	/* Check valid navigation point */
 	FVector CheckNavigationPoint(FVector TargetPosition);
 
-
-	UFUNCTION(BlueprintCallable)
-	FVector GetMovementDirection(float PlayerDistance);
-
+	/* Update points position */
 	void UpdateNavegationSystem();
 
-	UFUNCTION(BlueprintCallable)
-	void HitReact();
+	/*Firing timer function Montage*/
+	void Firing();
 
-	UFUNCTION(BlueprintCallable)
-	void GetProportionalSpeed(float distance);
+	/*Stop Firing*/
+	void StopFiring();
 
+	void PlayMontageDeathAnimation();
 
+	UFUNCTION(BlueprintImplementableEvent , BlueprintCallable , Category = "Enemy|Functions")
+	void BP_Death();
 
+	void SetupReferences();
 
-protected:
-	////////////////////////////////////////////////////////////////////
-	//
-	//   Character Class
-	//
-	////////////////////////////////////////////////////////////////////
+	////////////////// Delegate Component ///////////////////////
 
-
-
-		/** Weapon Skeletal Mesh for Player*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Main|CharacterComponents")
-		USkeletalMeshComponent* Weapon;
-
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-		USphereComponent* LocoPoint0;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-		USphereComponent* LocoPoint1;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-		USphereComponent* LocoPoint2;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-		USphereComponent* LocoPoint3;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-		USphereComponent* LocoPoint4;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-		USphereComponent* LocoPoint5;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-		USphereComponent* LocoPoint6;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-		USphereComponent* LocoPoint7;
+	 /** Health Delegate Component */
+	UFUNCTION(BlueprintCallable, Category = "Enemy|Component")
+		void OnHealthChange(UOR_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
-		TArray <FVector> LocomotionPoints;
+
+	
 
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-		float MyPitch;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-		float MyYaw;
 
 };
